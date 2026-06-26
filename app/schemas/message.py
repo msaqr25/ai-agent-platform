@@ -17,4 +17,3 @@ class MessageResponse(BaseModel):
     role: MessageRole
     content: str
     created_at: datetime
-    audio_file_id: int | None
