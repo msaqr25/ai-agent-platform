@@ -1,8 +1,8 @@
 """Initial schema
 
-Revision ID: 006bb97eb402
+Revision ID: e5fe876a785c
 Revises:
-Create Date: 2026-06-26 10:35:27.538004
+Create Date: 2026-06-26 18:50:00.162330
 
 """
 
@@ -10,10 +10,10 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 
-from alembic import op  # type: ignore[attr-defined]
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "006bb97eb402"
+revision: str = "e5fe876a785c"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -33,7 +33,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "audio_files",
-        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("filename", sa.String(length=255), nullable=False),
         sa.Column("file_path", sa.String(length=500), nullable=False),
         sa.Column("mime_type", sa.String(length=100), nullable=False),
@@ -42,7 +42,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "chat_sessions",
-        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("agent_id", sa.Integer(), nullable=False),
         sa.Column("title", sa.String(length=255), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
@@ -51,7 +51,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "messages",
-        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("session_id", sa.Integer(), nullable=False),
         sa.Column("role", sa.Enum("user", "assistant", name="messagerole"), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
