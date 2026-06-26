@@ -18,7 +18,7 @@ class ChatSession(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     agent_id: Mapped[int] = mapped_column(ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
-    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False, default="New Chat")
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     agent: Mapped[Agent] = relationship(back_populates="sessions")

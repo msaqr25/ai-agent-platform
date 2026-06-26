@@ -1,8 +1,8 @@
-"""Initial schema migration
+"""Initial schema
 
-Revision ID: 92093dd8c753
+Revision ID: 006bb97eb402
 Revises:
-Create Date: 2026-06-26 09:25:58.167915
+Create Date: 2026-06-26 10:35:27.538004
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from alembic import op  # type: ignore[attr-defined]
 
 # revision identifiers, used by Alembic.
-revision: str = "92093dd8c753"
+revision: str = "006bb97eb402"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -44,7 +44,7 @@ def upgrade() -> None:
         "chat_sessions",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("agent_id", sa.Integer(), nullable=False),
-        sa.Column("title", sa.String(length=255), nullable=True),
+        sa.Column("title", sa.String(length=255), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.ForeignKeyConstraint(["agent_id"], ["agents.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
