@@ -17,3 +17,8 @@ class MessageResponse(BaseModel):
     role: MessageRole
     content: str
     created_at: datetime
+
+
+class SendMessageResponse(BaseModel):
+    user_message: MessageResponse
+    assistant_message: MessageResponse

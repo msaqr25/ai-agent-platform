@@ -8,6 +8,7 @@ dependencies = [
     "aiosqlite>=0.22.1",
     "alembic>=1.18.5",
     "fastapi[standard]>=0.138.0",
+    "openai>=2.44.0",
     "sqlalchemy[asyncio]>=2.0.51",
 ]
 

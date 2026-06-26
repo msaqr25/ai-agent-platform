@@ -1,0 +1,31 @@
+from fastapi import APIRouter, status
+
+from app.core.database import GetDB
+from app.schemas.agent import AgentCreate, AgentResponse, AgentUpdate
+from app.services.agent import agent_service
+
+router = APIRouter(prefix="/agents", tags=["agents"])
+
+
+@router.post("/", response_model=AgentResponse, status_code=status.HTTP_201_CREATED)
+async def create_agent(data: AgentCreate, db: GetDB) -> AgentResponse:
+    agent = await agent_service.create_agent(data, db)
+    return AgentResponse.model_validate(agent)
+
+
+@router.get("/", response_model=list[AgentResponse])
+async def list_agents(db: GetDB) -> list[AgentResponse]:
+    agents = await agent_service.list_agents(db)
+    return [AgentResponse.model_validate(agent) for agent in agents]
+
+
+@router.get("/{agent_id}", response_model=AgentResponse)
+async def get_agent(agent_id: int, db: GetDB) -> AgentResponse:
+    agent = await agent_service.get_agent(agent_id, db)
+    return AgentResponse.model_validate(agent)
+
+
+@router.put("/{agent_id}", response_model=AgentResponse)
+async def update_agent(agent_id: int, data: AgentUpdate, db: GetDB) -> AgentResponse:
+    agent = await agent_service.update_agent(agent_id, data, db)
+    return AgentResponse.model_validate(agent)

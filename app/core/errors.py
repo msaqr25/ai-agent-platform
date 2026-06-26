@@ -35,6 +35,11 @@ class ConflictException(AppException):
         super().__init__(status_code=409, detail=detail, code=code or "CONFLICT")
 
 
+class OpenAIException(AppException):
+    def __init__(self, detail: str = "OpenAI request failed", code: str | None = None) -> None:
+        super().__init__(status_code=502, detail=detail, code=code or "OPENAI_ERROR")
+
+
 async def app_exception_handler(_request: Request, exc: AppException) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,

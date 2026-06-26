@@ -1,0 +1,23 @@
+from collections.abc import AsyncGenerator
+from typing import Annotated
+
+from fastapi import Depends
+from openai import AsyncOpenAI
+
+from app.core.config import settings
+from app.core.errors import OpenAIException
+
+
+async def get_openai_client() -> AsyncGenerator[AsyncOpenAI]:
+    api_key = getattr(settings, "OPENAI_API_KEY", None)
+    if not api_key:
+        raise OpenAIException(detail="OpenAI client is not configured")
+    client = AsyncOpenAI(api_key=api_key)
+
+    try:
+        yield client
+    finally:
+        await client.close()
+
+
+OpenAIClient = Annotated[AsyncOpenAI, Depends(get_openai_client)]
