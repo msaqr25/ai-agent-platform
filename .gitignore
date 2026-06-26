@@ -1,6 +1,9 @@
 ### dotenv ###
 .env
 
+# Audio files
+audio_files/
+
 ### Database Files ###
 *.sqlite3
 *.db

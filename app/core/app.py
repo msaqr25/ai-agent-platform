@@ -1,12 +1,15 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, status
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from app.controllers.agent import router as agent_router
 from app.controllers.chat_session import router as chat_session_router
 from app.controllers.message import router as message_router
+from app.controllers.voice import router as voice_router
 from app.core.config import settings
 from app.core.database import GetDB
 from app.core.errors import register_exception_handlers
@@ -31,6 +34,10 @@ def create_app() -> FastAPI:
     app.include_router(agent_router)
     app.include_router(chat_session_router)
     app.include_router(message_router)
+    app.include_router(voice_router)
+
+    Path(settings.AUDIO_STORAGE_DIR).mkdir(parents=True, exist_ok=True)
+    app.mount("/audio", StaticFiles(directory=settings.AUDIO_STORAGE_DIR), name="audio")
 
     @app.get("/health")
     async def check_health(db: GetDB) -> dict[str, str]:

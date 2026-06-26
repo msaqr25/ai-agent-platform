@@ -11,6 +11,7 @@ class AudioFileResponse(BaseModel):
     id: int
     message_id: int
     filename: str
+    file_path: str
     mime_type: str
     file_size: int
     created_at: datetime

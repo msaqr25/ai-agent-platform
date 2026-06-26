@@ -9,10 +9,10 @@ from app.core.errors import OpenAIException
 
 
 async def get_openai_client() -> AsyncGenerator[AsyncOpenAI]:
-    api_key = getattr(settings, "OPENAI_API_KEY", None)
+    api_key = settings.OPENAI_API_KEY
     if not api_key:
         raise OpenAIException(detail="OpenAI client is not configured")
-    client = AsyncOpenAI(api_key=api_key)
+    client = AsyncOpenAI(api_key=api_key.get_secret_value())
 
     try:
         yield client
