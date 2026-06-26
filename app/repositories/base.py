@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TypeVar, cast
+from typing import TypeVar
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +15,7 @@ class BaseRepository[ModelT]:
         self.model = model
 
     async def get_by_id(self, db: AsyncSession, id: int) -> ModelT | None:
-        return cast(ModelT | None, await db.get(self.model, id))
+        return await db.get(self.model, id)
 
     async def get_all(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> list[ModelT]:
         stmt = select(self.model).offset(skip).limit(limit)

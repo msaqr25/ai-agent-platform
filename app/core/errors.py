@@ -68,7 +68,7 @@ async def generic_exception_handler(_request: Request, _exc: Exception) -> JSONR
 
 
 def register_exception_handlers(app: FastAPI) -> None:
-    app.add_exception_handler(AppException, app_exception_handler)
-    app.add_exception_handler(HTTPException, http_exception_handler)
-    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(AppException, app_exception_handler)  # ty: ignore[invalid-argument-type]
+    app.add_exception_handler(HTTPException, http_exception_handler)  # ty: ignore[invalid-argument-type]
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)  # ty: ignore[invalid-argument-type]
     app.add_exception_handler(Exception, generic_exception_handler)
