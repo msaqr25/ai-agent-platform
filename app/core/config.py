@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
     OPENAI_API_KEY: SecretStr | None = None
+    OPENAI_MODEL_NAME: str = "gpt-4o-mini"
 
     AUDIO_STORAGE_DIR: str = "audio_files"
     MAX_AUDIO_FILE_SIZE: int = 10 * 1024 * 1024

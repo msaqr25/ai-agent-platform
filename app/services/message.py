@@ -49,9 +49,8 @@ class MessageService:
         )
 
         try:
-            model = getattr(settings, "OPENAI_MODEL_NAME", "gpt-4o-mini")
             completion = await openai_client.chat.completions.create(
-                model=model,
+                model=settings.OPENAI_MODEL_NAME,
                 messages=openai_messages,
             )
         except OpenAISDKError as exc:
