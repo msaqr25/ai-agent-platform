@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import GetDB
+from app.core.errors import register_exception_handlers
 from app.core.logger import get_logger, setup_logging
 from app.core.logging_middleware import LoggingMiddleware
 
@@ -22,6 +23,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(title=settings.APP_TITLE, version=settings.APP_VERSION, lifespan=lifespan)
 
 app.add_middleware(LoggingMiddleware)
+register_exception_handlers(app)
 
 
 @app.get("/health")
