@@ -1,0 +1,733 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "AI Agent Platform",
+    "description": "AI Agent Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "10000001"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "agent_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Body has status: ok', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('status', 'ok');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agents",
+      "item": [
+        {
+          "name": "Create Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Response has expected agent fields', function () {",
+                  "  pm.expect(json.id).to.be.a('number');",
+                  "  pm.expect(json.name).to.be.a('string');",
+                  "  pm.expect(json.prompt).to.be.a('string');",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set('agent_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Agent\",\n  \"prompt\": \"You are a helpful test assistant.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/agents/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "agents", ""]
+            }
+          }
+        },
+        {
+          "name": "List Agents",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Returns an array', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/agents/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "agents", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Agent by ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const agentId = pm.collectionVariables.get('agent_id');",
+                  "if (!agentId) {",
+                  "  throw new Error('Missing collection variable: agent_id');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Response matches expected agent', function () {",
+                  "  pm.expect(json.id).to.eql(Number(pm.collectionVariables.get('agent_id')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/agents/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "agents", "{{agent_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Agent",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const agentId = pm.collectionVariables.get('agent_id');",
+                  "if (!agentId) {",
+                  "  throw new Error('Missing collection variable: agent_id');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Agent updated', function () {",
+                  "  pm.expect(json.id).to.eql(Number(pm.collectionVariables.get('agent_id')));",
+                  "  pm.expect(json.name).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Test Agent\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/agents/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "agents", "{{agent_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Agent - Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Error response format', function () {",
+                  "  pm.expect(json.detail).to.be.a('string');",
+                  "  pm.expect(json.code).to.eql('NOT_FOUND');",
+                  "  pm.expect(json).to.have.property('errors');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/agents/99999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "agents", "99999"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "Create Session",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const agentId = pm.collectionVariables.get('agent_id');",
+                  "if (!agentId) {",
+                  "  throw new Error('Missing collection variable: agent_id');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Response has expected fields', function () {",
+                  "  pm.expect(json.id).to.be.a('number');",
+                  "  pm.expect(json.agent_id).to.eql(Number(pm.collectionVariables.get('agent_id')));",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set('session_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": {{agent_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/sessions/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sessions", ""]
+            }
+          }
+        },
+        {
+          "name": "List Sessions for Agent",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const agentId = pm.collectionVariables.get('agent_id');",
+                  "if (!agentId) {",
+                  "  throw new Error('Missing collection variable: agent_id');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Returns an array', function () {",
+                  "  pm.expect(json).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sessions/agent/{{agent_id}}?skip=0&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sessions", "agent", "{{agent_id}}"],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Session by ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const sessionId = pm.collectionVariables.get('session_id');",
+                  "if (!sessionId) {",
+                  "  throw new Error('Missing collection variable: session_id');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Response matches expected session', function () {",
+                  "  pm.expect(json.id).to.eql(Number(pm.collectionVariables.get('session_id')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sessions/{{session_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sessions", "{{session_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Session - Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Error response format', function () {",
+                  "  pm.expect(json.detail).to.be.a('string');",
+                  "  pm.expect(json.code).to.eql('NOT_FOUND');",
+                  "  pm.expect(json).to.have.property('errors');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sessions/99999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sessions", "99999"]
+            }
+          }
+        },
+        {
+          "name": "List Messages",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const sessionId = pm.collectionVariables.get('session_id');",
+                  "if (!sessionId) {",
+                  "  throw new Error('Missing collection variable: session_id');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Returns an array', function () {",
+                  "  pm.expect(json).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sessions/{{session_id}}/messages/?skip=0&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sessions", "{{session_id}}", "messages", ""],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Message (Text)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const sessionId = pm.collectionVariables.get('session_id');",
+                  "if (!sessionId) {",
+                  "  throw new Error('Missing collection variable: session_id');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Response has user_message and assistant_message', function () {",
+                  "  pm.expect(json).to.have.property('user_message');",
+                  "  pm.expect(json).to.have.property('assistant_message');",
+                  "});",
+                  "",
+                  "pm.test('User message has role user', function () {",
+                  "  pm.expect(json.user_message.role).to.eql('user');",
+                  "});",
+                  "",
+                  "pm.test('Assistant message has role assistant', function () {",
+                  "  pm.expect(json.assistant_message.role).to.eql('assistant');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello! Who are you?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/sessions/{{session_id}}/messages/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sessions", "{{session_id}}", "messages", ""]
+            }
+          }
+        },
+        {
+          "name": "Send Voice Message",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const sessionId = pm.collectionVariables.get('session_id');",
+                  "if (!sessionId) {",
+                  "  throw new Error('Missing collection variable: session_id');",
+                  "}",
+                  "",
+                  "const audioSrc = pm.request.body.formdata?.find(",
+                  "  f => f.key === 'audio' && f.type === 'file'",
+                  ");",
+                  "if (!audioSrc || !audioSrc.src) {",
+                  "  console.warn(",
+                  "    'No audio file selected. Click the audio field, select a .wav/.mp3/.ogg/.webm file.'",
+                  "  );",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 400) {",
+                  "  const json = pm.response.json();",
+                  "  pm.test('Returns a 400 error with code', function () {",
+                  "    pm.expect(json).to.have.property('code');",
+                  "    pm.expect(json.detail).to.be.a('string');",
+                  "  });",
+                  "  pm.test('Skipping — no audio file selected or invalid file', function () {});",
+                  "  return;",
+                  "}",
+                  "",
+                  "pm.test('Status is 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Response has all voice fields', function () {",
+                  "  pm.expect(json).to.have.property('user_message');",
+                  "  pm.expect(json).to.have.property('assistant_message');",
+                  "  pm.expect(json).to.have.property('audio_file');",
+                  "});",
+                  "",
+                  "pm.test('audio_file has expected structure', function () {",
+                  "  pm.expect(json.audio_file).to.be.an('object');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "audio",
+                  "type": "file",
+                  "src": "",
+                  "description": "Select an audio file (.wav, .mp3, .ogg, or .webm, max 10 MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/sessions/{{session_id}}/voice/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sessions", "{{session_id}}", "voice", ""]
+            },
+            "description": "Requires a real audio file. Select one from the form-data field before running."
+          }
+        },
+        {
+          "name": "Delete Session",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const sessionId = pm.collectionVariables.get('session_id');",
+                  "if (!sessionId) {",
+                  "  throw new Error('Missing collection variable: session_id');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test('No body returned', function () {",
+                  "  pm.expect(pm.response.text()).to.eql('');",
+                  "});",
+                  "",
+                  "pm.collectionVariables.unset('session_id');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sessions/{{session_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sessions", "{{session_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete Agent",
+      "item": [
+        {
+          "name": "Delete Agent",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const agentId = pm.collectionVariables.get('agent_id');",
+                  "if (!agentId) {",
+                  "  throw new Error('Missing collection variable: agent_id');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test('No body returned', function () {",
+                  "  pm.expect(pm.response.text()).to.eql('');",
+                  "});",
+                  "",
+                  "pm.collectionVariables.unset('agent_id');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/agents/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "agents", "{{agent_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
