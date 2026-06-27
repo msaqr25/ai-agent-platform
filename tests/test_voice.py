@@ -60,6 +60,7 @@ async def test_process_voice_message(client_with_openai: AsyncClient, mock_opena
     assert "filename" in data["audio_file"]
     assert "file_path" in data["audio_file"]
     assert "file_size" in data["audio_file"]
+    assert data["audio_file"]["message_id"] == data["assistant_message"]["id"]
 
 
 async def test_voice_invalid_session(client_with_openai: AsyncClient) -> None:

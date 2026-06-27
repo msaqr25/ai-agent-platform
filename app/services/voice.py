@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import uuid
 from pathlib import Path
 
@@ -73,13 +72,6 @@ class VoiceService:
         message_id: int,
         db: AsyncSession,
     ) -> AudioFile:
-        content_hash = hashlib.sha256(audio_bytes).hexdigest()
-
-        existing = await self.audio_repository.get_by_content_hash(db, content_hash)
-        if existing is not None:
-            logger.info("Duplicate audio file skipped", extra={"content_hash": content_hash})
-            return existing
-
         ext = get_extension(mime_type)
         filename = f"{uuid.uuid4().hex}{ext}"
         session_dir = Path(settings.AUDIO_STORAGE_DIR) / str(session_id)
@@ -94,7 +86,6 @@ class VoiceService:
                 "file_path": url_path,
                 "mime_type": mime_type,
                 "file_size": len(audio_bytes),
-                "content_hash": content_hash,
                 "message_id": message_id,
             },
         )
@@ -143,7 +134,7 @@ class VoiceService:
             db,
         )
 
-        await db.refresh(assistant_msg, ["audio_file"])
+        assistant_msg.audio_file = audio_file
 
         return audio_file, user_msg, assistant_msg
 

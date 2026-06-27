@@ -34,6 +34,8 @@ async def test_send_message(client_with_openai: AsyncClient, mock_openai: AsyncM
     assert data["user_message"]["content"] == "Hello"
     assert data["assistant_message"]["role"] == "assistant"
     assert data["assistant_message"]["content"] == "Hello back"
+    assert data["user_message"]["audio_file"] is None
+    assert data["assistant_message"]["audio_file"] is None
 
 
 async def test_get_messages(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:

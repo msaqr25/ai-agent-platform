@@ -11,15 +11,11 @@ class MessageRepository(BaseRepository[Message]):
         super().__init__(Message)
 
     async def get_by_session_id(
-        self, db: AsyncSession, session_id: int, skip: int = 0, limit: int = 1000
+        self, db: AsyncSession, session_id: int, skip: int = 0, limit: int = 1000, *, load_audio: bool = True
     ) -> list[Message]:
-        stmt = (
-            select(Message)
-            .options(joinedload(Message.audio_file))
-            .where(Message.session_id == session_id)
-            .order_by(Message.created_at.asc())
-            .offset(skip)
-            .limit(limit)
-        )
+        stmt = select(Message).where(Message.session_id == session_id).order_by(Message.created_at.asc())
+        if load_audio:
+            stmt = stmt.options(joinedload(Message.audio_file))
+        stmt = stmt.offset(skip).limit(limit)
         result = await db.execute(stmt)
         return list(result.scalars().all())

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
+from contextlib import suppress
 from unittest.mock import AsyncMock
 
 import pytest
@@ -9,6 +10,7 @@ import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from openai import AsyncOpenAI
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from app.core.app import create_app
@@ -47,6 +49,8 @@ async def clean_db(test_engine) -> AsyncGenerator[None]:
     async with test_engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
             await conn.execute(table.delete())
+        with suppress(Exception):
+            await conn.execute(text("DELETE FROM sqlite_sequence"))
 
 
 @pytest_asyncio.fixture

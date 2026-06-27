@@ -10,7 +10,6 @@ from app.core.errors import OpenAIException
 from app.core.logger import get_logger
 from app.models.message import Message, MessageRole
 from app.repositories.message import MessageRepository
-from app.services.agent import AgentService, agent_service
 from app.services.chat_session import ChatSessionService, chat_session_service
 
 logger = get_logger(__name__)
@@ -21,11 +20,9 @@ class MessageService:
         self,
         repository: MessageRepository | None = None,
         sessions: ChatSessionService | None = None,
-        agents: AgentService | None = None,
     ) -> None:
         self.repository = repository or MessageRepository()
         self.sessions = sessions or chat_session_service
-        self.agents = agents or agent_service
 
     async def get_messages(self, session_id: int, db: AsyncSession, skip: int = 0, limit: int = 1000) -> list[Message]:
         await self.sessions.get_session(session_id, db)
@@ -38,10 +35,9 @@ class MessageService:
         db: AsyncSession,
         openai_client: AsyncOpenAI,
     ) -> tuple[Message, Message]:
-        session = await self.sessions.get_session(session_id, db)
-        agent = await self.agents.get_agent(session.agent_id, db)
-        history = await self.repository.get_by_session_id(db, session_id)
-        openai_messages = self._build_openai_messages(agent.prompt, history, content)
+        session = await self.sessions.get_session_with_agent(session_id, db)
+        history = await self.repository.get_by_session_id(db, session_id, load_audio=False)
+        openai_messages = self._build_openai_messages(session.agent.prompt, history, content)
 
         user_message = await self.repository.create(
             db,
@@ -71,9 +67,9 @@ class MessageService:
         )
 
         if not history:
-            await self.sessions.update_title(session_id, content.strip()[:60], db, session=session)
+            await self.sessions.update_title(session, content.strip()[:60])
 
-        await self.sessions.touch_session(session_id, db, session=session)
+        await self.sessions.touch_session(session)
 
         logger.info(
             "Message sent",

@@ -27,6 +27,12 @@ class ChatSessionService:
     ) -> list[ChatSession]:
         return await self.repository.get_by_agent_id(db, agent_id, skip=skip, limit=limit)
 
+    async def get_session_with_agent(self, session_id: int, db: AsyncSession) -> ChatSession:
+        session = await self.repository.get_by_id_with_agent(db, session_id)
+        if session is None:
+            raise NotFoundException(detail=f"Chat session {session_id} not found")
+        return session
+
     async def get_session(self, session_id: int, db: AsyncSession) -> ChatSession:
         session = await self.repository.get_by_id(db, session_id)
         if session is None:
@@ -35,23 +41,15 @@ class ChatSessionService:
 
     async def update_title(
         self,
-        session_id: int,
+        session: ChatSession,
         title: str,
-        db: AsyncSession,
-        session: ChatSession | None = None,
     ) -> None:
-        if session is None:
-            session = await self.get_session(session_id, db)
         session.title = title
 
     async def touch_session(
         self,
-        session_id: int,
-        db: AsyncSession,
-        session: ChatSession | None = None,
+        session: ChatSession,
     ) -> None:
-        if session is None:
-            session = await self.get_session(session_id, db)
         session.updated_at = datetime.now(UTC)
 
     async def delete_session(self, session_id: int, db: AsyncSession) -> None:

@@ -1,8 +1,8 @@
 """Initial schema
 
-Revision ID: 256c8a7eedb6
+Revision ID: d07766a6c84d
 Revises:
-Create Date: 2026-06-27 03:39:59.844841
+Create Date: 2026-06-27 19:19:55.799949
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "256c8a7eedb6"
+revision: str = "d07766a6c84d"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -60,7 +60,6 @@ def upgrade() -> None:
         sa.Column("file_path", sa.String(length=500), nullable=False),
         sa.Column("mime_type", sa.String(length=100), nullable=False),
         sa.Column("file_size", sa.Integer(), nullable=False),
-        sa.Column("content_hash", sa.String(length=64), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("message_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(["message_id"], ["messages.id"], ondelete="CASCADE"),

@@ -24,7 +24,7 @@ async def process_voice_message(
     audio_file, user_msg, assistant_msg = await voice_service.process_voice_message(
         session_id,
         audio_bytes,
-        audio.content_type,  # ty: ignore[invalid-argument-type]
+        str(audio.content_type),
         db,
         openai_client,
     )
