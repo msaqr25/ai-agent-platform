@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import NotFoundException
@@ -31,6 +33,13 @@ class ChatSessionService:
 
     async def update_title(self, session_id: int, title: str, db: AsyncSession) -> ChatSession:
         return await self.repository.update(db, session_id, {"title": title})  # ty: ignore[invalid-return-type]
+
+    async def touch_session(self, session_id: int, db: AsyncSession) -> ChatSession:
+        session = await self.get_session(session_id, db)
+        session.updated_at = datetime.now(UTC)
+        await db.commit()
+        await db.refresh(session)
+        return session
 
 
 chat_session_service = ChatSessionService()

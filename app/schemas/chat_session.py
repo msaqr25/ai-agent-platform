@@ -14,3 +14,4 @@ class ChatSessionResponse(BaseModel):
     agent_id: int
     title: str
     created_at: datetime
+    updated_at: datetime

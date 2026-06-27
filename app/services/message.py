@@ -71,6 +71,8 @@ class MessageService:
         if not history:
             await self.sessions.update_title(session_id, content.strip()[:60], db)
 
+        await self.sessions.touch_session(session_id, db)
+
         logger.info(
             "Message sent",
             extra={
