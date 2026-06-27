@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
 from app.core.database import GetDB
 from app.core.openai import OpenAIClient
@@ -9,8 +9,13 @@ router = APIRouter(prefix="/sessions/{session_id}/messages", tags=["messages"])
 
 
 @router.get("/", response_model=list[MessageResponse])
-async def get_messages(session_id: int, db: GetDB) -> list[MessageResponse]:
-    messages = await message_service.get_messages(session_id, db)
+async def get_messages(
+    session_id: int,
+    db: GetDB,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(1000, ge=1, le=5000),
+) -> list[MessageResponse]:
+    messages = await message_service.get_messages(session_id, db, skip=skip, limit=limit)
     return [MessageResponse.model_validate(message) for message in messages]
 
 

@@ -68,6 +68,37 @@ async def test_send_message_openai_error(client_with_openai: AsyncClient, mock_o
     assert data["code"] == "OPENAI_ERROR"
 
 
+async def test_send_message_openai_error_does_not_persist(
+    client_with_openai: AsyncClient, mock_openai: AsyncMock
+) -> None:
+    _, session_id = await _create_agent_and_session(client_with_openai)
+
+    mock_openai.chat.completions.create = AsyncMock(side_effect=OpenAIError("API failure"))
+
+    await client_with_openai.post(f"/sessions/{session_id}/messages/", json={"content": "Hello"})
+
+    response = await client_with_openai.get(f"/sessions/{session_id}/messages/")
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 0
+
+
+async def test_get_messages_pagination(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
+    _, session_id = await _create_agent_and_session(client_with_openai)
+
+    mock_completion = MagicMock()
+    mock_choice = MagicMock()
+    mock_choice.message.content = "Response"
+    mock_completion.choices = [mock_choice]
+    mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
+
+    for i in range(5):
+        await client_with_openai.post(f"/sessions/{session_id}/messages/", json={"content": f"msg {i}"})
+
+    response = await client_with_openai.get(f"/sessions/{session_id}/messages/?skip=0&limit=2")
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 2  # noqa: PLR2004
+
+
 async def test_session_title_set_on_first_message(
     client_with_openai: AsyncClient,
     mock_openai: AsyncMock,

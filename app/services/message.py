@@ -27,9 +27,9 @@ class MessageService:
         self.sessions = sessions or chat_session_service
         self.agents = agents or agent_service
 
-    async def get_messages(self, session_id: int, db: AsyncSession) -> list[Message]:
+    async def get_messages(self, session_id: int, db: AsyncSession, skip: int = 0, limit: int = 1000) -> list[Message]:
         await self.sessions.get_session(session_id, db)
-        return await self.repository.get_by_session_id(db, session_id)
+        return await self.repository.get_by_session_id(db, session_id, skip=skip, limit=limit)
 
     async def send_message(
         self,
@@ -71,9 +71,9 @@ class MessageService:
         )
 
         if not history:
-            await self.sessions.update_title(session_id, content.strip()[:60], db)
+            await self.sessions.update_title(session_id, content.strip()[:60], db, session=session)
 
-        await self.sessions.touch_session(session_id, db)
+        await self.sessions.touch_session(session_id, db, session=session)
 
         logger.info(
             "Message sent",

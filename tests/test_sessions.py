@@ -30,6 +30,16 @@ async def test_list_sessions_for_agent(client: AsyncClient) -> None:
     assert len(sessions) == 2  # noqa: PLR2004
 
 
+async def test_list_sessions_for_agent_pagination(client: AsyncClient) -> None:
+    agent_resp = await client.post("/agents/", json={"name": "Test Agent"})
+    agent_id = agent_resp.json()["id"]
+    for _ in range(3):
+        await client.post("/sessions/", json={"agent_id": agent_id})
+    response = await client.get(f"/sessions/agent/{agent_id}?skip=0&limit=2")
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 2  # noqa: PLR2004
+
+
 async def test_get_session_not_found(client: AsyncClient) -> None:
     response = await client.get("/sessions/9999")
     assert response.status_code == status.HTTP_404_NOT_FOUND

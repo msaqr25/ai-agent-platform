@@ -22,8 +22,10 @@ class ChatSessionService:
         await self.agents.get_agent(data.agent_id, db)
         return await self.repository.create(db, data.model_dump())
 
-    async def list_sessions_for_agent(self, agent_id: int, db: AsyncSession) -> list[ChatSession]:
-        return await self.repository.get_by_agent_id(db, agent_id)
+    async def list_sessions_for_agent(
+        self, agent_id: int, db: AsyncSession, skip: int = 0, limit: int = 100
+    ) -> list[ChatSession]:
+        return await self.repository.get_by_agent_id(db, agent_id, skip=skip, limit=limit)
 
     async def get_session(self, session_id: int, db: AsyncSession) -> ChatSession:
         session = await self.repository.get_by_id(db, session_id)
@@ -31,15 +33,26 @@ class ChatSessionService:
             raise NotFoundException(detail=f"Chat session {session_id} not found")
         return session
 
-    async def update_title(self, session_id: int, title: str, db: AsyncSession) -> ChatSession:
-        return await self.repository.update(db, session_id, {"title": title})  # ty: ignore[invalid-return-type]
+    async def update_title(
+        self,
+        session_id: int,
+        title: str,
+        db: AsyncSession,
+        session: ChatSession | None = None,
+    ) -> None:
+        if session is None:
+            session = await self.get_session(session_id, db)
+        session.title = title
 
-    async def touch_session(self, session_id: int, db: AsyncSession) -> ChatSession:
-        session = await self.get_session(session_id, db)
+    async def touch_session(
+        self,
+        session_id: int,
+        db: AsyncSession,
+        session: ChatSession | None = None,
+    ) -> None:
+        if session is None:
+            session = await self.get_session(session_id, db)
         session.updated_at = datetime.now(UTC)
-        await db.commit()
-        await db.refresh(session)
-        return session
 
     async def delete_session(self, session_id: int, db: AsyncSession) -> None:
         await self.get_session(session_id, db)

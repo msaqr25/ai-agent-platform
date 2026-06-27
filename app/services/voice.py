@@ -73,12 +73,18 @@ class VoiceService:
         message_id: int,
         db: AsyncSession,
     ) -> AudioFile:
+        content_hash = hashlib.sha256(audio_bytes).hexdigest()
+
+        existing = await self.audio_repository.get_by_content_hash(db, content_hash)
+        if existing is not None:
+            logger.info("Duplicate audio file skipped", extra={"content_hash": content_hash})
+            return existing
+
         ext = get_extension(mime_type)
         filename = f"{uuid.uuid4().hex}{ext}"
         session_dir = Path(settings.AUDIO_STORAGE_DIR) / str(session_id)
         session_dir.mkdir(parents=True, exist_ok=True)
 
-        content_hash = hashlib.sha256(audio_bytes).hexdigest()
         url_path = f"/audio/{session_id}/{filename}"
 
         audio_file = await self.audio_repository.create(
@@ -94,12 +100,8 @@ class VoiceService:
         )
 
         filepath = session_dir / filename
-        try:
-            async with aiofiles.open(filepath, "wb") as f:
-                await f.write(audio_bytes)
-        except OSError:
-            await self.audio_repository.delete(db, audio_file.id)
-            raise
+        async with aiofiles.open(filepath, "wb") as f:
+            await f.write(audio_bytes)
 
         logger.info(
             "Audio file saved",

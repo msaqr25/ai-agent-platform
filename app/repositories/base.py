@@ -18,14 +18,14 @@ class BaseRepository[ModelT]:
         return await db.get(self.model, id)
 
     async def get_all(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> list[ModelT]:
-        stmt = select(self.model).offset(skip).limit(limit)
+        stmt = select(self.model).order_by(self.model.id).offset(skip).limit(limit)  # ty: ignore[unresolved-attribute]
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
     async def create(self, db: AsyncSession, data: dict) -> ModelT:
         instance = self.model(**data)
         db.add(instance)
-        await db.commit()
+        await db.flush()
         await db.refresh(instance)
         return instance
 
@@ -35,7 +35,7 @@ class BaseRepository[ModelT]:
             return None
         for key, value in data.items():
             setattr(instance, key, value)
-        await db.commit()
+        await db.flush()
         await db.refresh(instance)
         return instance
 
@@ -44,5 +44,5 @@ class BaseRepository[ModelT]:
         if instance is None:
             return False
         await db.delete(instance)
-        await db.commit()
+        await db.flush()
         return True

@@ -54,7 +54,12 @@ async def app(db_session) -> FastAPI:
     application = create_app()
 
     async def _override_get_db() -> AsyncGenerator[AsyncSession]:
-        yield db_session
+        try:
+            yield db_session
+            await db_session.commit()
+        except Exception:
+            await db_session.rollback()
+            raise
 
     application.dependency_overrides[get_db] = _override_get_db
     return application

@@ -9,7 +9,15 @@ class ChatSessionRepository(BaseRepository[ChatSession]):
     def __init__(self) -> None:
         super().__init__(ChatSession)
 
-    async def get_by_agent_id(self, db: AsyncSession, agent_id: int) -> list[ChatSession]:
-        stmt = select(ChatSession).where(ChatSession.agent_id == agent_id)
+    async def get_by_agent_id(
+        self, db: AsyncSession, agent_id: int, skip: int = 0, limit: int = 100
+    ) -> list[ChatSession]:
+        stmt = (
+            select(ChatSession)
+            .where(ChatSession.agent_id == agent_id)
+            .order_by(ChatSession.updated_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
         result = await db.execute(stmt)
         return list(result.scalars().all())
