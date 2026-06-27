@@ -11,6 +11,8 @@ export function MessageList() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [state.messages])
 
+  // After a voice message is sent, auto-play the assistant's TTS audio.
+  // consumePendingPlayback returns the id once and clears it to prevent repeats.
   useEffect(() => {
     const msgId = consumePendingPlayback()
     if (msgId === null) return

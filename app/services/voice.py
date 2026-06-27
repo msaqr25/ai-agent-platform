@@ -114,6 +114,7 @@ class VoiceService:
         db: AsyncSession,
         openai_client: AsyncOpenAI,
     ) -> tuple[AudioFile, Message, Message]:
+        """Full voice pipeline: STT → chat response → TTS → persist audio file."""
         await self.sessions.get_session(session_id, db)
 
         transcript_text = await self._transcribe(audio_bytes, mime_type, openai_client)

@@ -20,6 +20,8 @@ class ApiError extends Error {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = path
   const headers: Record<string, string> = {}
+  // Don't set Content-Type for FormData (browser sets it with boundary),
+  // but do set it for JSON bodies.
   if (!(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json'
   }
@@ -33,6 +35,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new ApiError(res.status, body)
   }
 
+  // 204 No Content has no body — return undefined cast to T.
   if (res.status === 204) return undefined as T
 
   return res.json() as Promise<T>

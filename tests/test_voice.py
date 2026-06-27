@@ -7,6 +7,8 @@ from fastapi import status
 from httpx import AsyncClient
 
 
+# aiofiles.open is an async context manager — patch it so that
+# __aenter__ returns a mock file handle, preventing actual disk I/O.
 @pytest_asyncio.fixture(autouse=True)
 async def mock_aiofiles():
     with patch("aiofiles.open") as mock_open:

@@ -69,6 +69,7 @@ class MessageService:
         if not history:
             await self.sessions.update_title(session, content.strip()[:60])
 
+        # Bump updated_at so the session appears at the top of the session list.
         await self.sessions.touch_session(session)
 
         logger.info(

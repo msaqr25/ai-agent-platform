@@ -48,6 +48,8 @@ async def read_and_validate_audio(upload: UploadFile, max_size: int) -> bytes:
     """Read upload stream, validate MIME type and size, return the raw bytes."""
     validate_audio_mime_type(upload.content_type)
 
+    # Stream-read in chunks so we can abort early if the file exceeds max_size,
+    # rather than buffering the entire upload before validating.
     total = 0
     chunks: list[bytes] = []
     while chunk := await upload.read(CHUNK_SIZE):

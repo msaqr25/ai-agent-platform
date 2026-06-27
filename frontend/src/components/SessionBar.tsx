@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { ConfirmDialog } from './ConfirmDialog'
 
+// Append 'Z' to treat the server's naive UTC timestamp as UTC when parsing.
 function toLocalTime(iso: string) {
   return new Date(iso + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }

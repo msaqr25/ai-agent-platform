@@ -9,6 +9,7 @@ from app.core.errors import OpenAIException
 
 
 async def get_openai_client() -> AsyncGenerator[AsyncOpenAI]:
+    # OPENAI_API_KEY is SecretStr | None — check for None before unwrapping.
     api_key = settings.OPENAI_API_KEY
     if not api_key:
         raise OpenAIException(detail="OpenAI client is not configured")

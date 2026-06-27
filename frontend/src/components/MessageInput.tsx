@@ -13,6 +13,8 @@ export function MessageInput() {
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
 
+  // Release the microphone and MediaRecorder so the mic indicator turns off
+  // and resources are freed when the component unmounts or recording ends.
   const cleanupMedia = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop()
@@ -58,13 +60,17 @@ export function MessageInput() {
       streamRef.current = stream
       chunksRef.current = []
 
+      // Prefer webm (widely supported in Chromium-based browsers);
+      // fall back to mp4 for Safari.
       const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
       const recorder = new MediaRecorder(stream, { mimeType })
 
+      // Collect audio chunks as they arrive from the MediaRecorder.
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data)
       }
 
+      // When recording stops, assemble chunks into a Blob and send it.
       recorder.onstop = async () => {
         setRecorderState('sending')
         const blob = new Blob(chunksRef.current, { type: mimeType })

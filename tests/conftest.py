@@ -46,6 +46,8 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession]:
 @pytest_asyncio.fixture(autouse=True)
 async def clean_db(test_engine) -> AsyncGenerator[None]:
     yield
+    # Delete in reverse FK order to avoid constraint violations, then reset
+    # SQLite autoincrement counters so each test starts with fresh IDs.
     async with test_engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
             await conn.execute(table.delete())
