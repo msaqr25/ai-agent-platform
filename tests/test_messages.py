@@ -8,9 +8,9 @@ from openai import OpenAIError
 
 
 async def _create_agent_and_session(client: AsyncClient) -> tuple[int, int]:
-    agent_resp = await client.post("/agents/", json={"name": "Test Agent"})
+    agent_resp = await client.post("/api/v1/agents/", json={"name": "Test Agent"})
     agent_id = agent_resp.json()["id"]
-    session_resp = await client.post("/sessions/", json={"agent_id": agent_id})
+    session_resp = await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     session_id = session_resp.json()["id"]
     return agent_id, session_id
 
@@ -25,7 +25,7 @@ async def test_send_message(client_with_openai: AsyncClient, mock_openai: AsyncM
     mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
 
     response = await client_with_openai.post(
-        f"/sessions/{session_id}/messages/",
+        f"/api/v1/sessions/{session_id}/messages/",
         json={"content": "Hello"},
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -45,10 +45,10 @@ async def test_get_messages(client_with_openai: AsyncClient, mock_openai: AsyncM
     mock_completion.choices = [mock_choice]
     mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
 
-    await client_with_openai.post(f"/sessions/{session_id}/messages/", json={"content": "First"})
-    await client_with_openai.post(f"/sessions/{session_id}/messages/", json={"content": "Second"})
+    await client_with_openai.post(f"/api/v1/sessions/{session_id}/messages/", json={"content": "First"})
+    await client_with_openai.post(f"/api/v1/sessions/{session_id}/messages/", json={"content": "Second"})
 
-    response = await client_with_openai.get(f"/sessions/{session_id}/messages/")
+    response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/")
     assert response.status_code == status.HTTP_200_OK
     messages = response.json()
     assert len(messages) == 4  # noqa: PLR2004
@@ -60,7 +60,7 @@ async def test_send_message_openai_error(client_with_openai: AsyncClient, mock_o
     mock_openai.chat.completions.create = AsyncMock(side_effect=OpenAIError("API failure"))
 
     response = await client_with_openai.post(
-        f"/sessions/{session_id}/messages/",
+        f"/api/v1/sessions/{session_id}/messages/",
         json={"content": "Hello"},
     )
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
@@ -75,9 +75,9 @@ async def test_send_message_openai_error_does_not_persist(
 
     mock_openai.chat.completions.create = AsyncMock(side_effect=OpenAIError("API failure"))
 
-    await client_with_openai.post(f"/sessions/{session_id}/messages/", json={"content": "Hello"})
+    await client_with_openai.post(f"/api/v1/sessions/{session_id}/messages/", json={"content": "Hello"})
 
-    response = await client_with_openai.get(f"/sessions/{session_id}/messages/")
+    response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 0
 
@@ -92,9 +92,9 @@ async def test_get_messages_pagination(client_with_openai: AsyncClient, mock_ope
     mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
 
     for i in range(5):
-        await client_with_openai.post(f"/sessions/{session_id}/messages/", json={"content": f"msg {i}"})
+        await client_with_openai.post(f"/api/v1/sessions/{session_id}/messages/", json={"content": f"msg {i}"})
 
-    response = await client_with_openai.get(f"/sessions/{session_id}/messages/?skip=0&limit=2")
+    response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/?skip=0&limit=2")
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 2  # noqa: PLR2004
 
@@ -112,11 +112,11 @@ async def test_session_title_set_on_first_message(
     mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
 
     await client_with_openai.post(
-        f"/sessions/{session_id}/messages/",
+        f"/api/v1/sessions/{session_id}/messages/",
         json={"content": "Hello, this is my first message in the session"},
     )
 
-    session_resp = await client_with_openai.get(f"/sessions/{session_id}")
+    session_resp = await client_with_openai.get(f"/api/v1/sessions/{session_id}")
     assert session_resp.status_code == status.HTTP_200_OK
     expected_title = "Hello, this is my first message in the session"[:60]
     assert session_resp.json()["title"] == expected_title

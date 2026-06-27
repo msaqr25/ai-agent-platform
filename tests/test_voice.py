@@ -18,9 +18,9 @@ async def mock_aiofiles():
 
 
 async def _create_agent_and_session(client: AsyncClient) -> int:
-    agent_resp = await client.post("/agents/", json={"name": "Test Agent"})
+    agent_resp = await client.post("/api/v1/agents/", json={"name": "Test Agent"})
     agent_id = agent_resp.json()["id"]
-    session_resp = await client.post("/sessions/", json={"agent_id": agent_id})
+    session_resp = await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     return session_resp.json()["id"]
 
 
@@ -43,7 +43,7 @@ async def test_process_voice_message(client_with_openai: AsyncClient, mock_opena
 
     audio_bytes = b"fake audio data"
     response = await client_with_openai.post(
-        f"/sessions/{session_id}/voice/",
+        f"/api/v1/sessions/{session_id}/voice/",
         files={"audio": ("test.wav", audio_bytes, "audio/wav")},
     )
 
@@ -65,7 +65,7 @@ async def test_process_voice_message(client_with_openai: AsyncClient, mock_opena
 async def test_voice_invalid_session(client_with_openai: AsyncClient) -> None:
     audio_bytes = b"fake audio data"
     response = await client_with_openai.post(
-        "/sessions/9999/voice/",
+        "/api/v1/sessions/9999/voice/",
         files={"audio": ("test.wav", audio_bytes, "audio/wav")},
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND

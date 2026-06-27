@@ -36,40 +36,40 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   agents: {
-    list: () => request<AgentResponse[]>('/agents/'),
-    get: (id: number) => request<AgentResponse>(`/agents/${id}`),
+    list: () => request<AgentResponse[]>('/api/v1/agents/'),
+    get: (id: number) => request<AgentResponse>(`/api/v1/agents/${id}`),
     create: (data: AgentCreate) =>
-      request<AgentResponse>('/agents/', {
+      request<AgentResponse>('/api/v1/agents/', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
     update: (id: number, data: AgentUpdate) =>
-      request<AgentResponse>(`/agents/${id}`, {
+      request<AgentResponse>(`/api/v1/agents/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
     delete: (id: number) =>
-      request<void>(`/agents/${id}`, { method: 'DELETE' }),
+      request<void>(`/api/v1/agents/${id}`, { method: 'DELETE' }),
   },
 
   sessions: {
     listForAgent: (agentId: number) =>
-      request<ChatSessionResponse[]>(`/sessions/agent/${agentId}`),
-    get: (id: number) => request<ChatSessionResponse>(`/sessions/${id}`),
+      request<ChatSessionResponse[]>(`/api/v1/sessions/agent/${agentId}`),
+    get: (id: number) => request<ChatSessionResponse>(`/api/v1/sessions/${id}`),
     create: (data: ChatSessionCreate) =>
-      request<ChatSessionResponse>('/sessions/', {
+      request<ChatSessionResponse>('/api/v1/sessions/', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
     delete: (id: number) =>
-      request<void>(`/sessions/${id}`, { method: 'DELETE' }),
+      request<void>(`/api/v1/sessions/${id}`, { method: 'DELETE' }),
   },
 
   messages: {
     list: (sessionId: number) =>
-      request<MessageResponse[]>(`/sessions/${sessionId}/messages/`),
+      request<MessageResponse[]>(`/api/v1/sessions/${sessionId}/messages/`),
     send: (sessionId: number, data: MessageCreate) =>
-      request<SendMessageResponse>(`/sessions/${sessionId}/messages/`, {
+      request<SendMessageResponse>(`/api/v1/sessions/${sessionId}/messages/`, {
         method: 'POST',
         body: JSON.stringify(data),
       }),
