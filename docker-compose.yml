@@ -9,6 +9,12 @@ services:
     volumes:
       - app_data:/app/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   frontend:
     build:
@@ -16,8 +22,15 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   app_data:
