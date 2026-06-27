@@ -1,7 +1,15 @@
 import { useApp } from '../context/AppContext'
 
+function toLocalTime(iso: string) {
+  return new Date(iso + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
 export function SessionBar() {
   const { state, selectSession, createSession } = useApp()
+
+  const sortedSessions = [...state.sessions].sort(
+    (a, b) => new Date(b.updated_at + 'Z').getTime() - new Date(a.updated_at + 'Z').getTime()
+  )
 
   if (!state.selectedAgent) {
     return (
@@ -26,9 +34,9 @@ export function SessionBar() {
         className="flex-1 rounded-lg border border-border bg-dark-700 px-3 py-1.5 text-sm text-text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent"
       >
         {state.sessions.length === 0 && <option value="">No sessions</option>}
-        {state.sessions.map((session) => (
+        {sortedSessions.map((session) => (
           <option key={session.id} value={session.id}>
-            {session.title}
+            {session.title} — {toLocalTime(session.updated_at)}
           </option>
         ))}
       </select>

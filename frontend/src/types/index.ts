@@ -21,6 +21,7 @@ export interface ChatSessionResponse {
   agent_id: number
   title: string
   created_at: string
+  updated_at: string
 }
 
 export interface ChatSessionCreate {

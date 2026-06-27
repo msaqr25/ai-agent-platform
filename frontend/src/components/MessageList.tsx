@@ -45,7 +45,7 @@ export function MessageList() {
                   msg.role === 'user' ? 'text-white/60' : 'text-text-muted'
                 }`}
               >
-                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(msg.created_at + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
           </div>

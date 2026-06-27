@@ -15,6 +15,7 @@ interface AppState {
 
 type Action =
   | { type: 'SET_AGENTS'; payload: AgentResponse[] }
+  | { type: 'UPDATE_AGENT'; payload: AgentResponse }
   | { type: 'SET_SELECTED_AGENT'; payload: AgentResponse | null }
   | { type: 'SET_SESSIONS'; payload: ChatSessionResponse[] }
   | { type: 'SET_SELECTED_SESSION'; payload: ChatSessionResponse | null }
@@ -39,6 +40,12 @@ function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'SET_AGENTS':
       return { ...state, agents: action.payload }
+    case 'UPDATE_AGENT':
+      return {
+        ...state,
+        agents: state.agents.map((a) => (a.id === action.payload.id ? action.payload : a)),
+        selectedAgent: state.selectedAgent?.id === action.payload.id ? action.payload : state.selectedAgent,
+      }
     case 'SET_SELECTED_AGENT':
       return { ...state, selectedAgent: action.payload }
     case 'SET_SESSIONS':
@@ -65,6 +72,7 @@ interface AppContextValue {
   loadAgents: () => Promise<void>
   selectAgent: (agent: AgentResponse) => Promise<void>
   createAgent: (name: string, prompt: string) => Promise<void>
+  updateAgent: (id: number, name: string, prompt: string) => Promise<void>
   selectSession: (session: ChatSessionResponse) => Promise<void>
   createSession: () => Promise<void>
   sendMessage: (content: string) => Promise<void>
@@ -129,6 +137,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const updateAgent = useCallback(async (id: number, name: string, prompt: string) => {
+    dispatch({ type: 'SET_ERROR', payload: null })
+    try {
+      const updated = await api.agents.update(id, { name, prompt })
+      dispatch({ type: 'UPDATE_AGENT', payload: updated })
+    } catch (e) {
+      dispatch({ type: 'SET_ERROR', payload: e instanceof Error ? e.message : 'Failed to update agent' })
+      throw e
+    }
+  }, [])
+
   const selectSession = useCallback(async (session: ChatSessionResponse) => {
     dispatch({ type: 'SET_SELECTED_SESSION', payload: session })
     dispatch({ type: 'SET_LOADING', payload: true })
@@ -183,6 +202,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadAgents,
       selectAgent,
       createAgent,
+      updateAgent,
       selectSession,
       createSession,
       sendMessage,
