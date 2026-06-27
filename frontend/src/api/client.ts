@@ -29,6 +29,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new ApiError(res.status, body)
   }
 
+  if (res.status === 204) return undefined as T
+
   return res.json() as Promise<T>
 }
 
@@ -46,6 +48,8 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
+    delete: (id: number) =>
+      request<void>(`/agents/${id}`, { method: 'DELETE' }),
   },
 
   sessions: {
@@ -57,6 +61,8 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    delete: (id: number) =>
+      request<void>(`/sessions/${id}`, { method: 'DELETE' }),
   },
 
   messages: {

@@ -16,9 +16,11 @@ interface AppState {
 type Action =
   | { type: 'SET_AGENTS'; payload: AgentResponse[] }
   | { type: 'UPDATE_AGENT'; payload: AgentResponse }
+  | { type: 'REMOVE_AGENT'; payload: number }
   | { type: 'SET_SELECTED_AGENT'; payload: AgentResponse | null }
   | { type: 'SET_SESSIONS'; payload: ChatSessionResponse[] }
   | { type: 'SET_SELECTED_SESSION'; payload: ChatSessionResponse | null }
+  | { type: 'REMOVE_SESSION'; payload: number }
   | { type: 'SET_MESSAGES'; payload: MessageResponse[] }
   | { type: 'APPEND_MESSAGES'; payload: [MessageResponse, MessageResponse] }
   | { type: 'TOGGLE_SIDEBAR' }
@@ -46,12 +48,28 @@ function reducer(state: AppState, action: Action): AppState {
         agents: state.agents.map((a) => (a.id === action.payload.id ? action.payload : a)),
         selectedAgent: state.selectedAgent?.id === action.payload.id ? action.payload : state.selectedAgent,
       }
+    case 'REMOVE_AGENT':
+      return {
+        ...state,
+        agents: state.agents.filter((a) => a.id !== action.payload),
+        selectedAgent: state.selectedAgent?.id === action.payload ? null : state.selectedAgent,
+        sessions: state.selectedAgent?.id === action.payload ? [] : state.sessions,
+        selectedSession: state.selectedAgent?.id === action.payload ? null : state.selectedSession,
+        messages: state.selectedAgent?.id === action.payload ? [] : state.messages,
+      }
     case 'SET_SELECTED_AGENT':
       return { ...state, selectedAgent: action.payload }
     case 'SET_SESSIONS':
       return { ...state, sessions: action.payload }
     case 'SET_SELECTED_SESSION':
       return { ...state, selectedSession: action.payload }
+    case 'REMOVE_SESSION':
+      return {
+        ...state,
+        sessions: state.sessions.filter((s) => s.id !== action.payload),
+        selectedSession: state.selectedSession?.id === action.payload ? null : state.selectedSession,
+        messages: state.selectedSession?.id === action.payload ? [] : state.messages,
+      }
     case 'SET_MESSAGES':
       return { ...state, messages: action.payload }
     case 'APPEND_MESSAGES':
@@ -73,8 +91,10 @@ interface AppContextValue {
   selectAgent: (agent: AgentResponse) => Promise<void>
   createAgent: (name: string, prompt: string) => Promise<void>
   updateAgent: (id: number, name: string, prompt: string) => Promise<void>
+  deleteAgent: (id: number) => Promise<void>
   selectSession: (session: ChatSessionResponse) => Promise<void>
   createSession: () => Promise<void>
+  deleteSession: (id: number) => Promise<void>
   sendMessage: (content: string) => Promise<void>
   toggleSidebar: () => void
   clearError: () => void
@@ -148,6 +168,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const deleteAgent = useCallback(async (id: number) => {
+    dispatch({ type: 'SET_ERROR', payload: null })
+    try {
+      await api.agents.delete(id)
+      dispatch({ type: 'REMOVE_AGENT', payload: id })
+    } catch (e) {
+      dispatch({ type: 'SET_ERROR', payload: e instanceof Error ? e.message : 'Failed to delete agent' })
+    }
+  }, [])
+
   const selectSession = useCallback(async (session: ChatSessionResponse) => {
     dispatch({ type: 'SET_SELECTED_SESSION', payload: session })
     dispatch({ type: 'SET_LOADING', payload: true })
@@ -176,6 +206,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [state.selectedAgent])
 
+  const deleteSession = useCallback(async (id: number) => {
+    dispatch({ type: 'SET_ERROR', payload: null })
+    try {
+      await api.sessions.delete(id)
+      dispatch({ type: 'REMOVE_SESSION', payload: id })
+    } catch (e) {
+      dispatch({ type: 'SET_ERROR', payload: e instanceof Error ? e.message : 'Failed to delete session' })
+    }
+  }, [])
+
   const sendMessage = useCallback(async (content: string) => {
     if (!state.selectedSession) return
     dispatch({ type: 'SET_ERROR', payload: null })
@@ -203,8 +243,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectAgent,
       createAgent,
       updateAgent,
+      deleteAgent,
       selectSession,
       createSession,
+      deleteSession,
       sendMessage,
       toggleSidebar,
       clearError,

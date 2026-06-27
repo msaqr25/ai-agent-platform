@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { Modal } from './Modal'
+import { ConfirmDialog } from './ConfirmDialog'
 
 export function Sidebar() {
-  const { state, selectAgent, createAgent, updateAgent, toggleSidebar } = useApp()
+  const { state, selectAgent, createAgent, updateAgent, deleteAgent, toggleSidebar } = useApp()
   const [showNewAgent, setShowNewAgent] = useState(false)
   const [newName, setNewName] = useState('')
   const [newPrompt, setNewPrompt] = useState('')
@@ -12,6 +13,8 @@ export function Sidebar() {
   const [editName, setEditName] = useState('')
   const [editPrompt, setEditPrompt] = useState('')
   const [updating, setUpdating] = useState(false)
+  const [deletingAgent, setDeletingAgent] = useState<typeof state.agents[0] | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,6 +43,19 @@ export function Sidebar() {
       // error is shown via context
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handleDeleteAgent = async () => {
+    if (!deletingAgent) return
+    setDeleting(true)
+    try {
+      await deleteAgent(deletingAgent.id)
+      setDeletingAgent(null)
+    } catch {
+      // error is shown via context
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -96,11 +112,23 @@ export function Sidebar() {
                   setEditName(agent.name)
                   setEditPrompt(agent.prompt)
                 }}
-                className="absolute right-2 top-2 rounded p-1 text-text-muted opacity-0 transition-opacity hover:text-text-primary group-hover:opacity-100"
+                className="absolute right-8 top-2 rounded p-1 text-text-muted opacity-0 transition-opacity hover:text-text-primary group-hover:opacity-100"
                 title="Edit agent"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setDeletingAgent(agent)
+                }}
+                className="absolute right-2 top-2 rounded p-1 text-text-muted opacity-0 transition-opacity hover:text-danger group-hover:opacity-100"
+                title="Delete agent"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
             </div>
@@ -205,6 +233,15 @@ export function Sidebar() {
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        open={!!deletingAgent}
+        title="Delete Agent"
+        message={`Are you sure you want to delete "${deletingAgent?.name}"? This will also delete all associated sessions and messages.`}
+        onConfirm={handleDeleteAgent}
+        onCancel={() => setDeletingAgent(null)}
+        loading={deleting}
+      />
     </>
   )
 }
