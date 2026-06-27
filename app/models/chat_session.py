@@ -23,4 +23,4 @@ class ChatSession(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     agent: Mapped[Agent] = relationship(back_populates="sessions")
-    messages: Mapped[list[Message]] = relationship(back_populates="session")
+    messages: Mapped[list[Message]] = relationship(back_populates="session", cascade="all, delete-orphan")

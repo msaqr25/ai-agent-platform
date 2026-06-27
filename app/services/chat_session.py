@@ -41,5 +41,9 @@ class ChatSessionService:
         await db.refresh(session)
         return session
 
+    async def delete_session(self, session_id: int, db: AsyncSession) -> None:
+        await self.get_session(session_id, db)
+        await self.repository.delete(db, session_id)
+
 
 chat_session_service = ChatSessionService()

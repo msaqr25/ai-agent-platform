@@ -23,3 +23,8 @@ async def list_sessions_for_agent(agent_id: int, db: GetDB) -> list[ChatSessionR
 async def get_session(session_id: int, db: GetDB) -> ChatSessionResponse:
     session = await chat_session_service.get_session(session_id, db)
     return ChatSessionResponse.model_validate(session)
+
+
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_session(session_id: int, db: GetDB) -> None:
+    await chat_session_service.delete_session(session_id, db)

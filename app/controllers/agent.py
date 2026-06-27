@@ -29,3 +29,8 @@ async def get_agent(agent_id: int, db: GetDB) -> AgentResponse:
 async def update_agent(agent_id: int, data: AgentUpdate, db: GetDB) -> AgentResponse:
     agent = await agent_service.update_agent(agent_id, data, db)
     return AgentResponse.model_validate(agent)
+
+
+@router.delete("/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_agent(agent_id: int, db: GetDB) -> None:
+    await agent_service.delete_agent(agent_id, db)

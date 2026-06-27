@@ -33,5 +33,9 @@ class AgentService:
             raise NotFoundException(detail=f"Agent {agent_id} not found")
         return updated_agent
 
+    async def delete_agent(self, agent_id: int, db: AsyncSession) -> None:
+        agent = await self.get_agent(agent_id, db)
+        await self.repository.delete(db, agent.id)
+
 
 agent_service = AgentService()
