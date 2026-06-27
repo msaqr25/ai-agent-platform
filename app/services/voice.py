@@ -10,9 +10,9 @@ from openai import OpenAIError as OpenAISDKError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.constants import MIME_TO_EXT
 from app.core.errors import OpenAIException
 from app.core.logger import get_logger
+from app.core.validators import MIME_TO_EXT
 from app.models.audio_file import AudioFile
 from app.models.message import Message
 from app.repositories.audio_file import AudioFileRepository
