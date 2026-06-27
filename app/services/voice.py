@@ -143,6 +143,8 @@ class VoiceService:
             db,
         )
 
+        await db.refresh(assistant_msg, ["audio_file"])
+
         return audio_file, user_msg, assistant_msg
 
 

@@ -1,7 +1,7 @@
 import type { AgentCreate, AgentResponse, AgentUpdate } from '../types'
 import type { ChatSessionCreate, ChatSessionResponse } from '../types'
 import type { MessageCreate, MessageResponse, SendMessageResponse } from '../types'
-import type { ErrorResponse } from '../types'
+import type { VoiceResponse, ErrorResponse } from '../types'
 
 class ApiError extends Error {
   status: number
@@ -19,8 +19,12 @@ class ApiError extends Error {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = path
+  const headers: Record<string, string> = {}
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json'
+  }
   const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: { ...headers, ...(options.headers as Record<string, string> | undefined) },
     ...options,
   })
 
@@ -73,5 +77,16 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+  },
+
+  voice: {
+    send: (sessionId: number, audioBlob: Blob) => {
+      const form = new FormData()
+      form.append('audio', audioBlob, `recording.${audioBlob.type === 'audio/webm' ? 'webm' : 'webm'}`)
+      return request<VoiceResponse>(`/api/v1/sessions/${sessionId}/voice/`, {
+        method: 'POST',
+        body: form,
+      })
+    },
   },
 }

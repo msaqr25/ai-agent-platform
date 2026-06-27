@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from app.models.message import Message
 from app.repositories.base import BaseRepository
@@ -14,6 +15,7 @@ class MessageRepository(BaseRepository[Message]):
     ) -> list[Message]:
         stmt = (
             select(Message)
+            .options(joinedload(Message.audio_file))
             .where(Message.session_id == session_id)
             .order_by(Message.created_at.asc())
             .offset(skip)

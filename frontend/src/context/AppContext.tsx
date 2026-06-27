@@ -26,6 +26,7 @@ type Action =
   | { type: 'TOGGLE_SIDEBAR' }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'APPEND_VOICE_MESSAGES'; payload: { user_message: MessageResponse; assistant_message: MessageResponse } }
 
 const initialState: AppState = {
   agents: [],
@@ -74,6 +75,11 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, messages: action.payload }
     case 'APPEND_MESSAGES':
       return { ...state, messages: [...state.messages, action.payload[0], action.payload[1]] }
+    case 'APPEND_VOICE_MESSAGES':
+      return {
+        ...state,
+        messages: [...state.messages, action.payload.user_message, action.payload.assistant_message],
+      }
     case 'TOGGLE_SIDEBAR':
       return { ...state, sidebarOpen: !state.sidebarOpen }
     case 'SET_LOADING':
@@ -96,8 +102,10 @@ interface AppContextValue {
   createSession: () => Promise<void>
   deleteSession: (id: number) => Promise<void>
   sendMessage: (content: string) => Promise<void>
+  sendVoiceMessage: (audioBlob: Blob) => Promise<void>
   toggleSidebar: () => void
   clearError: () => void
+  consumePendingPlayback: () => number | null
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -105,6 +113,7 @@ const AppContext = createContext<AppContextValue | null>(null)
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState)
   const abortRef = useRef<AbortController | null>(null)
+  const pendingPlaybackRef = useRef<number | null>(null)
 
   const loadAgents = useCallback(async () => {
     dispatch({ type: 'SET_LOADING', payload: true })
@@ -228,6 +237,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [state.selectedSession])
 
+  const sendVoiceMessage = useCallback(async (audioBlob: Blob) => {
+    if (!state.selectedSession) return
+    dispatch({ type: 'SET_ERROR', payload: null })
+    const currentSession = state.selectedSession
+    try {
+      const response = await api.voice.send(currentSession.id, audioBlob)
+      if (response.assistant_message.audio_file) {
+        pendingPlaybackRef.current = response.assistant_message.id
+      }
+      dispatch({ type: 'APPEND_VOICE_MESSAGES', payload: response })
+    } catch (e) {
+      dispatch({ type: 'SET_ERROR', payload: e instanceof Error ? e.message : 'Failed to send voice message' })
+    }
+  }, [state.selectedSession])
+
+  const consumePendingPlayback = useCallback(() => {
+    const id = pendingPlaybackRef.current
+    pendingPlaybackRef.current = null
+    return id
+  }, [])
+
   const toggleSidebar = useCallback(() => {
     dispatch({ type: 'TOGGLE_SIDEBAR' })
   }, [])
@@ -248,8 +278,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createSession,
       deleteSession,
       sendMessage,
+      sendVoiceMessage,
       toggleSidebar,
       clearError,
+      consumePendingPlayback,
     }}>
       {children}
     </AppContext.Provider>

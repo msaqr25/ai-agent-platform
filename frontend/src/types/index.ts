@@ -34,6 +34,7 @@ export interface MessageResponse {
   role: 'user' | 'assistant'
   content: string
   created_at: string
+  audio_file?: AudioFileResponse | null
 }
 
 export interface MessageCreate {

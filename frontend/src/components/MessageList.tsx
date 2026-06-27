@@ -1,13 +1,54 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../context/AppContext'
 
 export function MessageList() {
-  const { state } = useApp()
+  const { state, consumePendingPlayback } = useApp()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const [playingId, setPlayingId] = useState<number | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [state.messages])
+
+  useEffect(() => {
+    const msgId = consumePendingPlayback()
+    if (msgId === null) return
+    const msg = state.messages.find((m) => m.id === msgId)
+    if (!msg?.audio_file) return
+    playAudio(msg.id, msg.audio_file.file_path)
+  }, [state.messages, consumePendingPlayback])
+
+  const playAudio = (msgId: number, filePath: string) => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+
+    const audio = new Audio(filePath)
+    audio.onended = () => {
+      setPlayingId(null)
+      audioRef.current = null
+    }
+    audio.onerror = () => {
+      setPlayingId(null)
+      audioRef.current = null
+    }
+    audio.play()
+    audioRef.current = audio
+    setPlayingId(msgId)
+  }
+
+  const togglePlay = (msgId: number, filePath: string) => {
+    if (playingId === msgId && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+      setPlayingId(null)
+      return
+    }
+
+    playAudio(msgId, filePath)
+  }
 
   if (!state.selectedSession) {
     return (
@@ -40,13 +81,31 @@ export function MessageList() {
               }`}
             >
               <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-              <p
-                className={`mt-1 text-[10px] ${
-                  msg.role === 'user' ? 'text-white/60' : 'text-text-muted'
-                }`}
-              >
-                {new Date(msg.created_at + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </p>
+              <div className="mt-1 flex items-center gap-2">
+                {msg.role === 'assistant' && msg.audio_file && (
+                  <button
+                    onClick={() => togglePlay(msg.id, msg.audio_file!.file_path)}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-dark-600 text-text-secondary transition-colors hover:bg-dark-500 hover:text-text-primary"
+                    title={playingId === msg.id ? 'Pause' : 'Play audio'}
+                  >
+                    {playingId === msg.id ? (
+                      <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                        <rect x="6" y="4" width="4" height="16" rx="1" />
+                        <rect x="14" y="4" width="4" height="16" rx="1" />
+                      </svg>
+                    ) : (
+                      <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )}
+                  </button>
+                )}
+                <p
+                  className={`text-[10px] ${msg.role === 'user' ? 'text-white/60' : 'text-text-muted'}`}
+                >
+                  {new Date(msg.created_at + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
             </div>
           </div>
         ))}

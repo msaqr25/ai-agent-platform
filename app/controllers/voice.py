@@ -4,8 +4,8 @@ from app.core.config import settings
 from app.core.database import GetDB
 from app.core.openai import OpenAIClient
 from app.core.validators import read_and_validate_audio
-from app.schemas.audio_file import AudioFileResponse, VoiceResponse
-from app.schemas.message import MessageResponse
+from app.schemas.audio_file import AudioFileResponse
+from app.schemas.message import MessageResponse, VoiceResponse
 from app.services.voice import voice_service
 
 router = APIRouter(prefix="/sessions/{session_id}/voice", tags=["voice"])
@@ -29,6 +29,8 @@ async def process_voice_message(
         openai_client,
     )
 
+    await db.refresh(user_msg, ["audio_file"])
+    await db.refresh(assistant_msg, ["audio_file"])
     return VoiceResponse(
         user_message=MessageResponse.model_validate(user_msg),
         assistant_message=MessageResponse.model_validate(assistant_msg),
