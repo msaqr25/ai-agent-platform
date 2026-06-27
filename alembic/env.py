@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context  # type: ignore[attr-defined]
 from app.core.config import settings
-from app.core.database import Base
+from app.core.database import Base, ensure_db_dir
 from app.models.agent import Agent  # noqa: F401
 from app.models.audio_file import AudioFile  # noqa: F401
 from app.models.chat_session import ChatSession  # noqa: F401
@@ -71,6 +71,8 @@ async def run_async_migrations() -> None:
     and associate a connection with the context.
 
     """
+
+    ensure_db_dir(settings.DATABASE_URL)
 
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
