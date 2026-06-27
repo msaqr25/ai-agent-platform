@@ -62,6 +62,8 @@ class MessageService:
         assistant_reply = completion.choices[0].message.content
         if assistant_reply is None:
             raise OpenAIException(detail="OpenAI response did not include message content")
+        if not assistant_reply.strip():
+            raise OpenAIException(detail="OpenAI response contained empty message content")
 
         assistant_message = await self.repository.create(
             db,

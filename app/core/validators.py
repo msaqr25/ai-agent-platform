@@ -16,6 +16,13 @@ ALLOWED_AUDIO_MIME_TYPES: frozenset[str] = frozenset(MIME_TO_EXT)
 CHUNK_SIZE = 8 * 1024
 
 
+def get_extension(mime_type: str) -> str:
+    ext = MIME_TO_EXT.get(mime_type)
+    if ext is None:
+        raise BadRequestException(detail=f"Unsupported audio format: {mime_type}", code="INVALID_MIME_TYPE")
+    return ext
+
+
 def validate_audio_mime_type(content_type: str | None) -> None:
     if content_type not in ALLOWED_AUDIO_MIME_TYPES:
         raise BadRequestException(

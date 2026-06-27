@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.errors import OpenAIException
 from app.core.logger import get_logger
-from app.core.validators import MIME_TO_EXT
+from app.core.validators import get_extension
 from app.models.audio_file import AudioFile
 from app.models.message import Message
 from app.repositories.audio_file import AudioFileRepository
@@ -33,6 +33,38 @@ class VoiceService:
         self.sessions = sessions or chat_session_service
         self.messages = messages or message_service
 
+    async def _transcribe(
+        self,
+        audio_bytes: bytes,
+        mime_type: str,
+        openai_client: AsyncOpenAI,
+    ) -> str:
+        ext = get_extension(mime_type)
+        stt_filename = f"input{ext}"
+        try:
+            transcript = await openai_client.audio.transcriptions.create(
+                model=settings.OPENAI_STT_MODEL,
+                file=(stt_filename, audio_bytes, mime_type),
+            )
+        except OpenAISDKError as exc:
+            raise OpenAIException(detail="Speech-to-text request failed") from exc
+        return transcript.text
+
+    async def _synthesize(
+        self,
+        text: str,
+        openai_client: AsyncOpenAI,
+    ) -> bytes:
+        try:
+            tts_response = await openai_client.audio.speech.create(
+                model=settings.OPENAI_TTS_MODEL,
+                voice=settings.OPENAI_TTS_VOICE,
+                input=text,
+            )
+        except OpenAISDKError as exc:
+            raise OpenAIException(detail="Text-to-speech request failed") from exc
+        return tts_response.content
+
     async def _save_audio_file(
         self,
         audio_bytes: bytes,
@@ -41,7 +73,7 @@ class VoiceService:
         message_id: int,
         db: AsyncSession,
     ) -> AudioFile:
-        ext = MIME_TO_EXT[mime_type]
+        ext = get_extension(mime_type)
         filename = f"{uuid.uuid4().hex}{ext}"
         session_dir = Path(settings.AUDIO_STORAGE_DIR) / str(session_id)
         session_dir.mkdir(parents=True, exist_ok=True)
@@ -91,18 +123,7 @@ class VoiceService:
     ) -> tuple[AudioFile, Message, Message]:
         await self.sessions.get_session(session_id, db)
 
-        ext = MIME_TO_EXT[mime_type]
-        stt_filename = f"input{ext}"
-
-        try:
-            transcript = await openai_client.audio.transcriptions.create(
-                model="whisper-1",
-                file=(stt_filename, audio_bytes, mime_type),
-            )
-        except OpenAISDKError as exc:
-            raise OpenAIException(detail="Speech-to-text request failed") from exc
-
-        transcript_text = transcript.text
+        transcript_text = await self._transcribe(audio_bytes, mime_type, openai_client)
         logger.info(
             "Transcription completed",
             extra={"session_id": session_id, "transcript_length": len(transcript_text)},
@@ -110,18 +131,15 @@ class VoiceService:
 
         user_msg, assistant_msg = await self.messages.send_message(session_id, transcript_text, db, openai_client)
 
-        try:
-            tts_response = await openai_client.audio.speech.create(
-                model="tts-1",
-                voice="alloy",
-                input=assistant_msg.content,
-            )
-        except OpenAISDKError as exc:
-            raise OpenAIException(detail="Text-to-speech request failed") from exc
+        tts_bytes = await self._synthesize(assistant_msg.content, openai_client)
 
-        tts_bytes = tts_response.content
-
-        audio_file = await self._save_audio_file(tts_bytes, "audio/mpeg", session_id, assistant_msg.id, db)
+        audio_file = await self._save_audio_file(
+            tts_bytes,
+            settings.OPENAI_TTS_OUTPUT_MIME,
+            session_id,
+            assistant_msg.id,
+            db,
+        )
 
         return audio_file, user_msg, assistant_msg
 
