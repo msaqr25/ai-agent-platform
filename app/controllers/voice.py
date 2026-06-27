@@ -19,6 +19,7 @@ async def process_voice_message(
     db: GetDB,
     openai_client: OpenAIClient,
 ) -> VoiceResponse:
+    """Upload audio for transcription, send as message, and return the AI reply with synthesised speech."""
     audio_bytes = await read_and_validate_audio(audio, settings.MAX_AUDIO_FILE_SIZE)
 
     audio_file, user_msg, assistant_msg = await voice_service.process_voice_message(

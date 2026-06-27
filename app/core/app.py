@@ -17,6 +17,7 @@ from app.core.logging_middleware import LoggingMiddleware
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Manage application startup and shutdown lifecycle."""
     setup_logging()
     logger = get_logger(__name__)
     logger.info("Application startup")

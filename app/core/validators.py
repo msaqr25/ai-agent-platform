@@ -45,6 +45,7 @@ def validate_audio_not_empty(total: int) -> None:
 
 
 async def read_and_validate_audio(upload: UploadFile, max_size: int) -> bytes:
+    """Read upload stream, validate MIME type and size, return the raw bytes."""
     validate_audio_mime_type(upload.content_type)
 
     total = 0

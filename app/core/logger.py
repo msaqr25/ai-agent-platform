@@ -52,6 +52,7 @@ class JSONFormatter(logging.Formatter):
 
 
 def setup_logging() -> None:
+    """Configure the root logger with JSON output to stdout."""
     root_logger = logging.getLogger()
     root_logger.setLevel(settings.LOG_LEVEL)
 

@@ -16,6 +16,7 @@ class LoggingMiddleware:
         self.app = app
 
     async def __call__(self, scope: dict[str, Any], receive: ASGIReceive, send: ASGISend) -> None:
+        """Log request completion (or failure) with method, path, status, and duration."""
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return

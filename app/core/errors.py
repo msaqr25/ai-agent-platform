@@ -15,6 +15,7 @@ class AppException(HTTPException):
         code: str | None = None,
         errors: list[dict] | None = None,
     ) -> None:
+        """Base application exception with optional error code and detail list."""
         super().__init__(status_code=status_code, detail=detail)
         self.code = code
         self.errors = errors
@@ -22,25 +23,30 @@ class AppException(HTTPException):
 
 class NotFoundException(AppException):
     def __init__(self, detail: str = "Resource not found", code: str | None = None) -> None:
+        """Raised when a requested resource does not exist (404)."""
         super().__init__(status_code=404, detail=detail, code=code or "NOT_FOUND")
 
 
 class BadRequestException(AppException):
     def __init__(self, detail: str = "Bad request", code: str | None = None, errors: list[dict] | None = None) -> None:
+        """Raised on invalid client input (400)."""
         super().__init__(status_code=400, detail=detail, code=code or "BAD_REQUEST", errors=errors)
 
 
 class ConflictException(AppException):
     def __init__(self, detail: str = "Conflict", code: str | None = None) -> None:
+        """Raised when a request conflicts with the current state (409)."""
         super().__init__(status_code=409, detail=detail, code=code or "CONFLICT")
 
 
 class OpenAIException(AppException):
     def __init__(self, detail: str = "OpenAI request failed", code: str | None = None) -> None:
+        """Raised when an OpenAI API call fails (502)."""
         super().__init__(status_code=502, detail=detail, code=code or "OPENAI_ERROR")
 
 
 async def app_exception_handler(_request: Request, exc: AppException) -> JSONResponse:
+    """Handle AppException subclasses and return a structured JSON error response."""
     return JSONResponse(
         status_code=exc.status_code,
         content=ErrorResponse(detail=exc.detail, code=exc.code, errors=exc.errors).model_dump(),
@@ -48,6 +54,7 @@ async def app_exception_handler(_request: Request, exc: AppException) -> JSONRes
 
 
 async def http_exception_handler(_request: Request, exc: HTTPException) -> JSONResponse:
+    """Handle generic HTTPException and return a structured JSON error response."""
     return JSONResponse(
         status_code=exc.status_code,
         content=ErrorResponse(detail=str(exc.detail), code="HTTP_ERROR").model_dump(),
@@ -55,6 +62,7 @@ async def http_exception_handler(_request: Request, exc: HTTPException) -> JSONR
 
 
 async def validation_exception_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Handle request validation errors (422) with field-level error details."""
     return JSONResponse(
         status_code=422,
         content=ErrorResponse(
@@ -66,6 +74,7 @@ async def validation_exception_handler(_request: Request, exc: RequestValidation
 
 
 async def generic_exception_handler(_request: Request, _exc: Exception) -> JSONResponse:
+    """Catch-all handler for unhandled exceptions (500)."""
     return JSONResponse(
         status_code=500,
         content=ErrorResponse(detail="Internal server error", code="INTERNAL_ERROR").model_dump(),
@@ -73,6 +82,7 @@ async def generic_exception_handler(_request: Request, _exc: Exception) -> JSONR
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    """Register all custom exception handlers on the FastAPI application."""
     app.add_exception_handler(AppException, app_exception_handler)  # ty: ignore[invalid-argument-type]
     app.add_exception_handler(HTTPException, http_exception_handler)  # ty: ignore[invalid-argument-type]
     app.add_exception_handler(RequestValidationError, validation_exception_handler)  # ty: ignore[invalid-argument-type]
