@@ -15,29 +15,21 @@ from app.core.validators import validate_mime_type
 from app.models.audio_file import AudioFile
 from app.models.message import Message
 from app.repositories.audio_file import AudioFileRepository
-from app.services.chat_session import ChatSessionService, chat_session_service
-from app.services.message import MessageService, message_service
+from app.services.chat_session import ChatSessionService
+from app.services.message import MessageService
 
 logger = get_logger(__name__)
 
 
 class VoiceService:
     def __init__(
-        self,
-        audio_repository: AudioFileRepository | None = None,
-        sessions: ChatSessionService | None = None,
-        messages: MessageService | None = None,
+        self, audio_repository: AudioFileRepository, sessions: ChatSessionService, messages: MessageService
     ) -> None:
-        self.audio_repository = audio_repository or AudioFileRepository()
-        self.sessions = sessions or chat_session_service
-        self.messages = messages or message_service
+        self.audio_repository = audio_repository
+        self.sessions = sessions
+        self.messages = messages
 
-    async def _transcribe(
-        self,
-        audio_bytes: bytes,
-        mime_type: str,
-        openai_client: AsyncOpenAI,
-    ) -> str:
+    async def _transcribe(self, audio_bytes: bytes, mime_type: str, openai_client: AsyncOpenAI) -> str:
         ext = validate_mime_type(mime_type)
         stt_filename = f"input{ext}"
         try:
@@ -49,11 +41,7 @@ class VoiceService:
             raise OpenAIException(detail="Speech-to-text request failed") from exc
         return transcript.text
 
-    async def _synthesize(
-        self,
-        text: str,
-        openai_client: AsyncOpenAI,
-    ) -> bytes:
+    async def _synthesize(self, text: str, openai_client: AsyncOpenAI) -> bytes:
         try:
             tts_response = await openai_client.audio.speech.create(
                 model=settings.OPENAI_TTS_MODEL,
@@ -65,12 +53,7 @@ class VoiceService:
         return tts_response.content
 
     async def _save_audio_file(
-        self,
-        audio_bytes: bytes,
-        mime_type: str,
-        session_id: int,
-        message_id: int,
-        db: AsyncSession,
+        self, audio_bytes: bytes, mime_type: str, session_id: int, message_id: int, db: AsyncSession
     ) -> AudioFile:
         ext = validate_mime_type(mime_type)
         filename = f"{uuid.uuid4().hex}{ext}"
@@ -107,12 +90,7 @@ class VoiceService:
         return audio_file
 
     async def process_voice_message(
-        self,
-        session_id: int,
-        audio_bytes: bytes,
-        mime_type: str,
-        db: AsyncSession,
-        openai_client: AsyncOpenAI,
+        self, session_id: int, audio_bytes: bytes, mime_type: str, db: AsyncSession, openai_client: AsyncOpenAI
     ) -> tuple[Message, Message]:
         """Full voice pipeline: STT → chat response → TTS → persist audio file."""
         await self.sessions.get_session(session_id, db)
@@ -140,6 +118,3 @@ class VoiceService:
         assistant_msg.audio_file = audio_file
 
         return user_msg, assistant_msg
-
-
-voice_service = VoiceService()

@@ -9,7 +9,8 @@ from sqlalchemy import text
 
 from app.controllers.router import router
 from app.core.config import settings
-from app.core.database import GetDB, ensure_db_dir
+from app.core.database import ensure_db_dir
+from app.core.dependencies import GetDB
 from app.core.errors import register_exception_handlers
 from app.core.logger import get_logger, setup_logging
 from app.core.logging_middleware import LoggingMiddleware

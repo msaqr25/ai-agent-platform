@@ -6,17 +6,13 @@ from app.core.errors import NotFoundException
 from app.models.chat_session import ChatSession
 from app.repositories.chat_session import ChatSessionRepository
 from app.schemas.chat_session import ChatSessionCreate
-from app.services.agent import AgentService, agent_service
+from app.services.agent import AgentService
 
 
 class ChatSessionService:
-    def __init__(
-        self,
-        repository: ChatSessionRepository | None = None,
-        agents: AgentService | None = None,
-    ) -> None:
-        self.repository = repository or ChatSessionRepository()
-        self.agents = agents or agent_service
+    def __init__(self, repository: ChatSessionRepository, agents: AgentService) -> None:
+        self.repository = repository
+        self.agents = agents
 
     async def create_session(self, data: ChatSessionCreate, db: AsyncSession) -> ChatSession:
         await self.agents.get_agent(data.agent_id, db)
@@ -41,22 +37,12 @@ class ChatSessionService:
             raise NotFoundException(detail=f"Chat session {session_id} not found")
         return session
 
-    async def update_title(
-        self,
-        session: ChatSession,
-        title: str,
-    ) -> None:
+    async def update_title(self, session: ChatSession, title: str) -> None:
         session.title = title
 
-    async def touch_session(
-        self,
-        session: ChatSession,
-    ) -> None:
+    async def touch_session(self, session: ChatSession) -> None:
         session.updated_at = datetime.now(UTC)
 
     async def delete_session(self, session_id: int, db: AsyncSession) -> None:
         await self.get_session(session_id, db)
         await self.repository.delete(db, session_id)
-
-
-chat_session_service = ChatSessionService()

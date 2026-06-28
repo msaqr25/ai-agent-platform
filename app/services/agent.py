@@ -10,8 +10,8 @@ logger = get_logger(__name__)
 
 
 class AgentService:
-    def __init__(self, repository: AgentRepository | None = None) -> None:
-        self.repository = repository or AgentRepository()
+    def __init__(self, repository: AgentRepository) -> None:
+        self.repository = repository
 
     async def create_agent(self, data: AgentCreate, db: AsyncSession) -> Agent:
         agent = await self.repository.create(db, data.model_dump())
@@ -38,6 +38,3 @@ class AgentService:
     async def delete_agent(self, agent_id: int, db: AsyncSession) -> None:
         agent = await self.get_agent(agent_id, db)
         await self.repository.delete(db, agent.id)
-
-
-agent_service = AgentService()

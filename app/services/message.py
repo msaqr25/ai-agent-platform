@@ -10,7 +10,7 @@ from app.core.errors import OpenAIException
 from app.core.logger import get_logger
 from app.models.message import Message, MessageRole
 from app.repositories.message import MessageRepository
-from app.services.chat_session import ChatSessionService, chat_session_service
+from app.services.chat_session import ChatSessionService
 
 TITLE_TRUNCATE_LENGTH: int = 60
 
@@ -18,13 +18,9 @@ logger = get_logger(__name__)
 
 
 class MessageService:
-    def __init__(
-        self,
-        repository: MessageRepository | None = None,
-        sessions: ChatSessionService | None = None,
-    ) -> None:
-        self.repository = repository or MessageRepository()
-        self.sessions = sessions or chat_session_service
+    def __init__(self, repository: MessageRepository, sessions: ChatSessionService) -> None:
+        self.repository = repository
+        self.sessions = sessions
 
     async def get_messages(
         self, session_id: int, db: AsyncSession, skip: int = 0, limit: int = 50, order: str = "asc"
@@ -35,11 +31,7 @@ class MessageService:
         return items, total
 
     async def send_message(
-        self,
-        session_id: int,
-        content: str,
-        db: AsyncSession,
-        openai_client: AsyncOpenAI,
+        self, session_id: int, content: str, db: AsyncSession, openai_client: AsyncOpenAI
     ) -> tuple[Message, Message]:
         session = await self.sessions.get_session_with_agent(session_id, db)
         history = await self.repository.get_by_session_id(db, session_id, load_audio=False)
@@ -75,9 +67,7 @@ class MessageService:
         return user_message, assistant_message
 
     async def _call_openai(
-        self,
-        openai_client: AsyncOpenAI,
-        messages: list[ChatCompletionMessageParam],
+        self, openai_client: AsyncOpenAI, messages: list[ChatCompletionMessageParam]
     ) -> ChatCompletion:
         try:
             return await openai_client.chat.completions.create(
@@ -98,15 +88,9 @@ class MessageService:
         return reply
 
     def _build_openai_messages(
-        self,
-        agent_prompt: str,
-        history: list[Message],
-        content: str,
+        self, agent_prompt: str, history: list[Message], content: str
     ) -> list[ChatCompletionMessageParam]:
         messages: list[dict[str, str]] = [{"role": "system", "content": agent_prompt}]
         messages.extend({"role": message.role.value, "content": message.content} for message in history)
         messages.append({"role": "user", "content": content})
         return cast(list[ChatCompletionMessageParam], messages)
-
-
-message_service = MessageService()

@@ -14,9 +14,9 @@ from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from app.core.app import create_app
-from app.core.database import Base, get_db
+from app.core.database import Base
+from app.core.dependencies import get_db, get_openai_client
 from app.core.errors import OpenAIException
-from app.core.openai import get_openai_client
 
 
 @pytest.fixture(scope="session")
@@ -112,7 +112,7 @@ async def app_without_openai(app: FastAPI) -> FastAPI:
     async def _raise_openai():
         raise OpenAIException(detail="OpenAI client is not configured")
 
-    app.dependency_overrides[get_openai_client] = _raise_openai  # type: ignore[assignment]
+    app.dependency_overrides[get_openai_client] = _raise_openai
     return app
 
 

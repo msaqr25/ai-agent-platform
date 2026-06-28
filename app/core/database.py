@@ -1,8 +1,5 @@
-from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import Annotated
 
-from fastapi import Depends
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -36,17 +33,3 @@ AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_
 
 class Base(DeclarativeBase):
     pass
-
-
-async def get_db() -> AsyncGenerator[AsyncSession]:
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-            # Commit on success, rollback on any exception
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-
-
-GetDB = Annotated[AsyncSession, Depends(get_db)]
