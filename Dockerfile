@@ -3,6 +3,12 @@ FROM python:3.13-slim AS builder
 RUN pip install uv --no-cache-dir
 
 WORKDIR /app
+
+# UV Docker optimization
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
+
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
