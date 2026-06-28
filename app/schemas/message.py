@@ -1,13 +1,15 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.message import MessageRole
 from app.schemas.audio_file import AudioFileResponse
 
 
 class MessageCreate(BaseModel):
-    content: str
+    model_config = ConfigDict(extra="forbid")
+
+    content: str = Field(min_length=1, max_length=50000)
 
 
 class MessageResponse(BaseModel):

@@ -43,3 +43,15 @@ async def test_list_sessions_for_agent_pagination(client: AsyncClient) -> None:
 async def test_get_session_not_found(client: AsyncClient) -> None:
     response = await client.get("/api/v1/sessions/9999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+async def test_create_session_extra_fields(client: AsyncClient) -> None:
+    agent_resp = await client.post("/api/v1/agents/", json={"name": "Test Agent"})
+    agent_id = agent_resp.json()["id"]
+    response = await client.post("/api/v1/sessions/", json={"agent_id": agent_id, "extra": "bad"})
+    assert response.status_code == 422  # noqa: PLR2004
+
+
+async def test_create_session_agent_id_zero(client: AsyncClient) -> None:
+    response = await client.post("/api/v1/sessions/", json={"agent_id": 0})
+    assert response.status_code == 422  # noqa: PLR2004

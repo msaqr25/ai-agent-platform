@@ -15,6 +15,15 @@ async def _create_agent_and_session(client: AsyncClient) -> tuple[int, int]:
     return agent_id, session_id
 
 
+async def test_send_message_empty_content(client: AsyncClient) -> None:
+    _, session_id = await _create_agent_and_session(client)
+    response = await client.post(
+        f"/api/v1/sessions/{session_id}/messages/",
+        json={"content": ""},
+    )
+    assert response.status_code == 422  # noqa: PLR2004
+
+
 async def test_send_message(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
     _, session_id = await _create_agent_and_session(client_with_openai)
 

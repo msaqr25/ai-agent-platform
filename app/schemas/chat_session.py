@@ -1,10 +1,12 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ChatSessionCreate(BaseModel):
-    agent_id: int
+    model_config = ConfigDict(extra="forbid")
+
+    agent_id: int = Field(gt=0)
 
 
 class ChatSessionResponse(BaseModel):

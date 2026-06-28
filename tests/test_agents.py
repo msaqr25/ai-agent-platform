@@ -47,3 +47,13 @@ async def test_update_agent(client: AsyncClient) -> None:
     response = await client.put(f"/api/v1/agents/{agent_id}", json={"name": "Updated Name"})
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["name"] == "Updated Name"
+
+
+async def test_create_agent_extra_fields(client: AsyncClient) -> None:
+    response = await client.post("/api/v1/agents/", json={"name": "Agent", "prompt": "Hi", "unknown_field": "oops"})
+    assert response.status_code == 422  # noqa: PLR2004
+
+
+async def test_create_agent_empty_name(client: AsyncClient) -> None:
+    response = await client.post("/api/v1/agents/", json={"name": ""})
+    assert response.status_code == 422  # noqa: PLR2004
