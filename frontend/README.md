@@ -1,21 +1,16 @@
-# ai-agent-platform — Frontend
-
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite)](https://vite.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
+# AI Agent Platform — Frontend
 
 A dark-themed single-page application for interacting with AI agents. Built with React 19, TypeScript 6, Vite 8, and Tailwind CSS v4. Communicates with the backend API for agent management, chat sessions, text messaging, and voice input/output.
 
 ## Features
 
-- **Agent management** — Create, edit, and delete AI agents through the sidebar.
-- **Chat sessions** — Per-agent conversation sessions with auto-titling.
-- **Text messaging** — Send and receive messages with an AI agent.
-- **Voice messaging** — Record audio via the browser `MediaRecorder` API, send it for STT transcription + AI completion + TTS synthesis, and auto-play the spoken response.
-- **Audio playback** — Inline audio player for assistant TTS responses with play/pause controls.
-- **Dark theme** — Custom dark design system via Tailwind CSS v4 `@theme`.
-- **Responsive layout** — Collapsible sidebar, session selector bar, and message area.
+- **Agent management**: Create, edit, and delete AI agents through the sidebar.
+- **Chat sessions**: Per-agent conversation sessions with auto-titling.
+- **Text messaging**: Send and receive messages with an AI agent.
+- **Voice messaging**: Record audio via the browser `MediaRecorder` API, send it for STT transcription + AI completion + TTS synthesis, and auto-play the spoken response.
+- **Audio playback**: Inline audio player for assistant TTS responses with play/pause controls.
+- **Dark theme**: Custom dark design system via Tailwind CSS v4 `@theme`.
+- **Responsive layout**: Collapsible sidebar, session selector bar, and message area.
 
 ## Tech Stack
 
@@ -24,10 +19,9 @@ A dark-themed single-page application for interacting with AI agents. Built with
 | Framework    | React 19                                                      |
 | Language     | TypeScript ~6.0                                               |
 | Bundler      | Vite 8                                                        |
-| Styling      | Tailwind CSS v4 (with `@tailwindcss/vite` plugin)             |
+| Styling      | Tailwind CSS v4                                               |
 | Linting      | Oxlint                                                        |
 | API Client   | Native `fetch`                                                |
-| State        | `useReducer` + `useContext` (no external libraries)           |
 | Audio        | `MediaRecorder` API (recording), `Audio` element (playback)   |
 | Container    | Docker (multi-stage: `node:22-alpine` + `nginx:alpine`)       |
 
@@ -35,7 +29,6 @@ A dark-themed single-page application for interacting with AI agents. Built with
 
 - **Node.js** 22 or later
 - **npm** 10 or later
-- The **backend** server running on `http://localhost:8000` (see the project root README)
 
 ## Getting Started
 
@@ -99,8 +92,8 @@ docker run -p 8080:80 frontend
 ```
 
 The Dockerfile uses a multi-stage build:
-1. **Builder** (`node:22-alpine`) — installs dependencies and runs `npm run build`.
-2. **Runtime** (`nginx:alpine`) — serves the built assets and proxies API paths to the backend.
+1. **Builder** (`node:22-alpine`): installs dependencies and runs `npm run build`.
+2. **Runtime** (`nginx:alpine`): serves the built assets and proxies API paths to the backend.
 
 ## Configuration
 
@@ -161,11 +154,11 @@ Defined in `nginx.conf`. The reverse proxy forwards `/api/`, `/health`, and `/au
 
 All application state lives in `AppContext` using a `useReducer` + `useContext` pattern. Actions are dispatched through a discriminated union type. Key state includes:
 
-- `agents` — list of agents
-- `sessions` — sessions for the selected agent
-- `messages` — messages for the selected session
-- `sidebarOpen` — sidebar visibility toggle
-- `isLoading` / `error` — global loading and error states
+- `agents`: list of agents
+- `sessions`: sessions for the selected agent
+- `messages`: messages for the selected session
+- `sidebarOpen`: sidebar visibility toggle
+- `isLoading` / `error`: global loading and error states
 
 ### API client
 
@@ -180,28 +173,3 @@ The client in `src/api/client.ts` wraps `fetch` with typed request/response meth
 5. The response includes the user message, assistant message, and audio file metadata.
 6. `MessageList` auto-plays the audio and shows a play/pause button on assistant messages.
 
-## API Endpoints Consumed
-
-| Method | Endpoint                                  | Purpose                     |
-| ------ | ----------------------------------------- | --------------------------- |
-| GET    | `/api/v1/agents/`                         | List agents                 |
-| POST   | `/api/v1/agents/`                         | Create an agent             |
-| GET    | `/api/v1/agents/{id}`                     | Get an agent                |
-| PUT    | `/api/v1/agents/{id}`                     | Update an agent             |
-| DELETE | `/api/v1/agents/{id}`                     | Delete an agent             |
-| GET    | `/api/v1/sessions/agent/{agent_id}`       | List sessions for an agent  |
-| POST   | `/api/v1/sessions/`                       | Create a session            |
-| GET    | `/api/v1/sessions/{id}`                   | Get a session               |
-| DELETE | `/api/v1/sessions/{id}`                   | Delete a session            |
-| GET    | `/api/v1/sessions/{id}/messages/`         | List messages               |
-| POST   | `/api/v1/sessions/{id}/messages/`         | Send a text message         |
-| POST   | `/api/v1/sessions/{id}/voice/`            | Send a voice message        |
-
-## Available Scripts
-
-| Command             | Description                                |
-| ------------------- | ------------------------------------------ |
-| `npm run dev`       | Start Vite dev server with HMR             |
-| `npm run build`     | Type-check with `tsc -b` then `vite build` |
-| `npm run preview`   | Preview the production build locally       |
-| `npm run lint`      | Run Oxlint                                 |

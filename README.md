@@ -1,22 +1,17 @@
-# ai-agent-platform
+# AI Agent Platform
 
-[![Python](https://img.shields.io/badge/python-3.13-blue?logo=python)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.138+-0b6e3f?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-
-An **AI agent chat platform** with voice input/output, built with FastAPI, async SQLAlchemy, and SQLite. Create custom AI agents, hold multi-turn conversations, and send voice messages that are transcribed, processed, and responded to with speech — all powered by OpenAI.
+An **AI agent chat platform** with voice input/output, built with FastAPI, async SQLAlchemy, and SQLite. Create custom AI agents, hold multi-turn conversations, and send voice messages that are transcribed, processed, and responded to with speech.
 
 ## Features
 
-- **Agent management** — Create, update, and delete AI agents with custom system prompts.
-- **Chat sessions** — Scoped conversations tied to an agent, with auto-titling.
-- **Text messaging** — Send messages to an agent and receive AI-generated replies.
-- **Voice messaging** — Upload audio (WAV, MP3, OGG, WebM) for STT transcription, AI completion, and TTS speech synthesis — the full pipeline in one request.
-- **Audio file serving** — Generated speech files served at `/audio/{session_id}/{filename}`.
-- **Health check** — `GET /health` endpoint with database reachability probe.
-- **Structured error handling** — Consistent JSON error responses via a typed exception hierarchy.
-- **JSON logging** — Structured request logging for observability.
-- **Docker support** — One-command deployment with Docker Compose (backend + frontend).
+- **Agent management**: Create, update, and delete AI agents with custom system prompts.
+- **Chat sessions**: Scoped conversations tied to an agent, with auto-titling.
+- **Text messaging**: Send messages to an agent and receive AI-generated replies.
+- **Voice messaging**: Upload audio (WAV, MP3, OGG, WebM) for STT transcription, AI completion, and TTS speech synthesis: the full pipeline in one request.
+- **Audio file serving**: Generated speech files served at `/audio/{session_id}/{filename}`.
+- **Structured error handling**: Consistent JSON error responses via a typed exception hierarchy.
+- **JSON logging**: Structured request logging for observability.
+- **Docker support**: One-command deployment with Docker Compose (backend + frontend).
 
 ## Architecture
 
@@ -34,25 +29,21 @@ The backend follows a **layered architecture**:
 └──────────────┘
 ```
 
-- **Dependency injection** via FastAPI's `Depends` — sessions, clients, and services are wired automatically.
-- **Transaction management** owned by the dependency layer — repositories use `flush`, the `get_db` dependency commits on success and rolls back on exception.
-- **OpenAI client** injected as a typed `Depends`; raises `502 OpenAIException` if `OPENAI_API_KEY` is not configured.
-
 ## Tech Stack
 
-| Category       | Technology                                                    |
-| -------------- | ------------------------------------------------------------- |
-| Runtime        | Python 3.13                                                   |
-| Framework      | FastAPI (with `fastapi[standard]`)                            |
-| Database       | SQLite via `aiosqlite` + async SQLAlchemy 2.0                 |
-| Migrations     | Alembic (async)                                               |
-| AI / Voice     | OpenAI API (GPT-4o-mini, Whisper, TTS)                        |
-| Validation     | Pydantic (via pydantic-settings)                              |
-| Testing        | pytest + pytest-asyncio + httpx (ASGI transport)              |
-| Linting        | Ruff                                                          |
-| Type checking  | `ty`                                                          |
-| Container      | Docker + Docker Compose                                       |
-| Frontend       | React 19, TypeScript 6, Vite 8, Tailwind CSS v4 *(separate)*  |
+| Category       | Technology                                             |
+| -------------- | ------------------------------------------------------ |
+| Runtime        | Python 3.13                                            |
+| Framework      | FastAPI                                                |
+| Database       | SQLite via `aiosqlite` + async SQLAlchemy 2.0          |
+| Migrations     | Alembic (async)                                        |
+| AI / Voice     | OpenAI API (GPT-4o-mini, Whisper, TTS)                 |
+| Validation     | Pydantic                                               |
+| Testing        | pytest + pytest-asyncio + httpx (ASGI transport)       |
+| Linting        | Ruff                                                   |
+| Type checking  | ty                                                     |
+| Container      | Docker + Docker Compose                                |
+| Frontend       | React 19, TypeScript 6, Vite 8, Tailwind CSS v4        |
 
 ## Prerequisites
 
@@ -65,7 +56,7 @@ The backend follows a **layered architecture**:
 ### 1. Clone the repository
 
 ```sh
-git clone <repository-url>
+git clone https://github.com/msaqr25/ai-agent-platform
 cd ai-agent-platform
 ```
 
@@ -101,8 +92,9 @@ This creates a virtual environment at `.venv` and installs all runtime and dev d
 python -m venv .venv
 source .venv/bin/activate   # Linux/macOS
 # .venv\Scripts\activate    # Windows
-pip install -r requirements.txt
-pip install -r requirements-dev.txt  # if available, or install dev deps manually
+pip install -r requirements.txt          # For production dependencies
+# OR
+pip install -r requirements-dev.txt      # For full development/production dependencies
 ```
 
 > **Note**: `requirements.txt` is auto-generated. For development, `uv sync` is preferred as it ensures lockfile consistency.
@@ -146,7 +138,7 @@ View logs:
 docker compose logs -f
 ```
 
-> The backend runs as a non-root user (`appuser`, uid 999). SQLite data and audio files persist in a named Docker volume (`app_data`). The entrypoint runs `alembic upgrade head` automatically before starting the server.
+> The backend runs as a non-root user (`appuser`). SQLite data and audio files persist in a named Docker volume (`app_data`). The entrypoint runs `alembic upgrade head` automatically before starting the server.
 
 ---
 
@@ -234,7 +226,7 @@ All routes are mounted under the `/api/v1` prefix.
 | POST   | `/api/v1/sessions/{id}/voice/`        | Send a voice message (upload)  |
 | GET    | `/health`                             | Health check (with DB probe)   |
 
-> Interactive API documentation is automatically available at `/docs` (Swagger UI) and `/redoc` (ReDoc).
+> Interactive API documentation is automatically available at `/docs` (Swagger UI).
 
 ## Testing
 
@@ -285,13 +277,9 @@ uv run alembic upgrade head
 
 ### Adding dependencies
 
-After modifying `pyproject.toml`:
-
 ```sh
-uv lock
+uv add <package-name>
 ```
-
-This updates `uv.lock` and `requirements.txt`. Both are checked into version control.
 
 ## Frontend
 
@@ -315,6 +303,3 @@ All configuration is managed via pydantic-settings and read from `.env`. The ful
 | `AUDIO_STORAGE_DIR`       | `data/audio_files`        | Directory for audio file storage         |
 | `MAX_AUDIO_FILE_SIZE`     | `10485760` (10 MB)        | Maximum upload size in bytes             |
 
-## License
-
-MIT
