@@ -1,10 +1,11 @@
-from typing import cast
-
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse
 
+from app.core.logger import get_logger
 from app.schemas.error import ErrorResponse
+
+logger = get_logger(__name__)
 
 
 class AppException(HTTPException):
@@ -68,13 +69,14 @@ async def validation_exception_handler(_request: Request, exc: RequestValidation
         content=ErrorResponse(
             detail="Validation error",
             code="VALIDATION_ERROR",
-            errors=cast(list[dict], exc.errors()),
+            errors=exc.errors(),  # ty: ignore[invalid-argument-type]
         ).model_dump(),
     )
 
 
 async def generic_exception_handler(_request: Request, _exc: Exception) -> JSONResponse:
     """Catch-all handler for unhandled exceptions (500)."""
+    logger.exception("Unhandled exception")
     return JSONResponse(
         status_code=500,
         content=ErrorResponse(detail="Internal server error", code="INTERNAL_ERROR").model_dump(),
