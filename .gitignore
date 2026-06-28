@@ -1,7 +1,8 @@
 ### dotenv ###
 .env
 
-# Audio files
+# Data & Audio files
+data/
 audio_files/
 
 ### Database Files ###
