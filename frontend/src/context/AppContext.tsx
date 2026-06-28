@@ -75,6 +75,7 @@ function reducer(state: AppState, action: Action): AppState {
         sessions: state.selectedAgent?.id === action.payload ? [] : state.sessions,
         selectedSession: state.selectedAgent?.id === action.payload ? null : state.selectedSession,
         messages: state.selectedAgent?.id === action.payload ? [] : state.messages,
+        messagesTotal: state.selectedAgent?.id === action.payload ? 0 : state.messagesTotal,
       }
     case 'SET_SELECTED_AGENT':
       return { ...state, selectedAgent: action.payload }
@@ -91,6 +92,7 @@ function reducer(state: AppState, action: Action): AppState {
         sessionsTotal: Math.max(0, state.sessionsTotal - 1),
         selectedSession: state.selectedSession?.id === action.payload ? null : state.selectedSession,
         messages: state.selectedSession?.id === action.payload ? [] : state.messages,
+        messagesTotal: state.selectedSession?.id === action.payload ? 0 : state.messagesTotal,
       }
     case 'SET_MESSAGES':
       return { ...state, messages: action.payload, messagesTotal: action.total ?? state.messagesTotal }
@@ -258,7 +260,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const session = await api.sessions.create({ agent_id: state.selectedAgent.id })
       dispatch({ type: 'SET_SESSIONS', payload: [session, ...state.sessions], total: state.sessionsTotal + 1 })
       dispatch({ type: 'SET_SELECTED_SESSION', payload: session })
-      dispatch({ type: 'SET_MESSAGES', payload: [] })
+      dispatch({ type: 'SET_MESSAGES', payload: [], total: 0 })
     } catch (e) {
       dispatch({ type: 'SET_ERROR', payload: e instanceof Error ? e.message : 'Failed to create session' })
     }
