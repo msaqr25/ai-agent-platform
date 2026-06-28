@@ -27,8 +27,6 @@ async def send_message(
     openai_client: OpenAIClient,
 ) -> SendMessageResponse:
     user_message, assistant_message = await message_service.send_message(session_id, data.content, db, openai_client)
-    await db.refresh(user_message, ["audio_file"])
-    await db.refresh(assistant_message, ["audio_file"])
     return SendMessageResponse(
         user_message=MessageResponse.model_validate(user_message),
         assistant_message=MessageResponse.model_validate(assistant_message),

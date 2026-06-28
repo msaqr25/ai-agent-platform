@@ -1,46 +1,36 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from fastapi import status
 from httpx import AsyncClient
 from openai import OpenAIError
 
-
-async def _create_agent_and_session(client: AsyncClient) -> tuple[int, int]:
-    agent_resp = await client.post("/api/v1/agents/", json={"name": "Test Agent"})
-    agent_id = agent_resp.json()["id"]
-    session_resp = await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
-    session_id = session_resp.json()["id"]
-    return agent_id, session_id
+from app.services.message import TITLE_TRUNCATE_LENGTH
+from tests.conftest import create_agent_and_session, mock_chat_completion
 
 
 async def test_send_message_empty_content(client_with_openai: AsyncClient) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
+    _, session_id = await create_agent_and_session(client_with_openai)
     response = await client_with_openai.post(
         f"/api/v1/sessions/{session_id}/messages/",
         json={"content": ""},
     )
-    assert response.status_code == 422  # noqa: PLR2004
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 async def test_send_message_content_too_long(client_with_openai: AsyncClient) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
+    _, session_id = await create_agent_and_session(client_with_openai)
     response = await client_with_openai.post(
         f"/api/v1/sessions/{session_id}/messages/",
         json={"content": "x" * 50001},
     )
-    assert response.status_code == 422  # noqa: PLR2004
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 async def test_send_message(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
-
-    mock_completion = MagicMock()
-    mock_choice = MagicMock()
-    mock_choice.message.content = "Hello back"
-    mock_completion.choices = [mock_choice]
-    mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
+    _, session_id = await create_agent_and_session(client_with_openai)
+    mock_chat_completion(mock_openai, "Hello back")
 
     response = await client_with_openai.post(
         f"/api/v1/sessions/{session_id}/messages/",
@@ -65,13 +55,8 @@ async def test_send_message_session_not_found(client_with_openai: AsyncClient) -
 
 
 async def test_get_messages(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
-
-    mock_completion = MagicMock()
-    mock_choice = MagicMock()
-    mock_choice.message.content = "Response"
-    mock_completion.choices = [mock_choice]
-    mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
+    _, session_id = await create_agent_and_session(client_with_openai)
+    mock_chat_completion(mock_openai, "Response")
 
     await client_with_openai.post(f"/api/v1/sessions/{session_id}/messages/", json={"content": "First"})
     await client_with_openai.post(f"/api/v1/sessions/{session_id}/messages/", json={"content": "Second"})
@@ -79,6 +64,7 @@ async def test_get_messages(client_with_openai: AsyncClient, mock_openai: AsyncM
     response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/")
     assert response.status_code == status.HTTP_200_OK
     messages = response.json()
+    # 2 user messages × 2 (user + assistant) = 4 total
     assert len(messages) == 4  # noqa: PLR2004
 
 
@@ -88,15 +74,14 @@ async def test_get_messages_session_not_found(client_with_openai: AsyncClient) -
 
 
 async def test_get_messages_empty(client_with_openai: AsyncClient) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
+    _, session_id = await create_agent_and_session(client_with_openai)
     response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == []
 
 
 async def test_send_message_openai_error(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
-
+    _, session_id = await create_agent_and_session(client_with_openai)
     mock_openai.chat.completions.create = AsyncMock(side_effect=OpenAIError("API failure"))
 
     response = await client_with_openai.post(
@@ -123,8 +108,7 @@ async def test_send_message_openai_unconfigured(
 async def test_send_message_openai_error_does_not_persist(
     client_with_openai: AsyncClient, mock_openai: AsyncMock
 ) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
-
+    _, session_id = await create_agent_and_session(client_with_openai)
     mock_openai.chat.completions.create = AsyncMock(side_effect=OpenAIError("API failure"))
 
     await client_with_openai.post(f"/api/v1/sessions/{session_id}/messages/", json={"content": "Hello"})
@@ -135,13 +119,8 @@ async def test_send_message_openai_error_does_not_persist(
 
 
 async def test_get_messages_pagination(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
-
-    mock_completion = MagicMock()
-    mock_choice = MagicMock()
-    mock_choice.message.content = "Response"
-    mock_completion.choices = [mock_choice]
-    mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
+    _, session_id = await create_agent_and_session(client_with_openai)
+    mock_chat_completion(mock_openai, "Response")
 
     for i in range(5):
         await client_with_openai.post(f"/api/v1/sessions/{session_id}/messages/", json={"content": f"msg {i}"})
@@ -155,13 +134,8 @@ async def test_session_title_set_on_first_message(
     client_with_openai: AsyncClient,
     mock_openai: AsyncMock,
 ) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
-
-    mock_completion = MagicMock()
-    mock_choice = MagicMock()
-    mock_choice.message.content = "Assistant reply"
-    mock_completion.choices = [mock_choice]
-    mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
+    _, session_id = await create_agent_and_session(client_with_openai)
+    mock_chat_completion(mock_openai, "Assistant reply")
 
     await client_with_openai.post(
         f"/api/v1/sessions/{session_id}/messages/",
@@ -170,7 +144,7 @@ async def test_session_title_set_on_first_message(
 
     session_resp = await client_with_openai.get(f"/api/v1/sessions/{session_id}")
     assert session_resp.status_code == status.HTTP_200_OK
-    expected_title = "Hello, this is my first message in the session"[:60]
+    expected_title = "Hello, this is my first message in the session"[:TITLE_TRUNCATE_LENGTH]
     assert session_resp.json()["title"] == expected_title
 
 
@@ -178,13 +152,8 @@ async def test_session_title_unchanged_on_subsequent_messages(
     client_with_openai: AsyncClient,
     mock_openai: AsyncMock,
 ) -> None:
-    _, session_id = await _create_agent_and_session(client_with_openai)
-
-    mock_completion = MagicMock()
-    mock_choice = MagicMock()
-    mock_choice.message.content = "Assistant reply"
-    mock_completion.choices = [mock_choice]
-    mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
+    _, session_id = await create_agent_and_session(client_with_openai)
+    mock_chat_completion(mock_openai, "Assistant reply")
 
     await client_with_openai.post(
         f"/api/v1/sessions/{session_id}/messages/",

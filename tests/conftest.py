@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import suppress
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
@@ -114,3 +114,37 @@ async def client_without_openai(app_without_openai: FastAPI) -> AsyncGenerator[A
     transport = ASGITransport(app=app_without_openai)
     async with AsyncClient(transport=transport, base_url="http://test") as _client:
         yield _client
+
+
+# ---------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------
+
+
+async def create_agent(client: AsyncClient) -> int:
+    resp = await client.post("/api/v1/agents/", json={"name": "Test Agent"})
+    return resp.json()["id"]
+
+
+async def create_agent_and_session(client: AsyncClient) -> tuple[int, int]:
+    agent_id = await create_agent(client)
+    resp = await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
+    return agent_id, resp.json()["id"]
+
+
+def mock_chat_completion(mock_openai: AsyncMock, response_text: str = "Hello back") -> None:
+    mock_choice = MagicMock()
+    mock_choice.message.content = response_text
+    mock_completion = MagicMock()
+    mock_completion.choices = [mock_choice]
+    mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def mock_aiofiles():
+    with patch("aiofiles.open") as mock_open:
+        mock_cm = AsyncMock()
+        mock_file = AsyncMock()
+        mock_cm.__aenter__.return_value = mock_file
+        mock_open.return_value = mock_cm
+        yield

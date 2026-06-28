@@ -4,7 +4,6 @@ from app.core.config import settings
 from app.core.database import GetDB
 from app.core.openai import OpenAIClient
 from app.core.validators import read_and_validate_audio
-from app.schemas.audio_file import AudioFileResponse
 from app.schemas.message import MessageResponse, VoiceResponse
 from app.services.voice import voice_service
 
@@ -22,7 +21,7 @@ async def process_voice_message(
     """Upload audio for transcription, send as message, and return the AI reply with synthesised speech."""
     audio_bytes = await read_and_validate_audio(audio, settings.MAX_AUDIO_FILE_SIZE)
 
-    audio_file, user_msg, assistant_msg = await voice_service.process_voice_message(
+    user_msg, assistant_msg = await voice_service.process_voice_message(
         session_id,
         audio_bytes,
         str(audio.content_type),
@@ -30,10 +29,7 @@ async def process_voice_message(
         openai_client,
     )
 
-    await db.refresh(user_msg, ["audio_file"])
-    await db.refresh(assistant_msg, ["audio_file"])
     return VoiceResponse(
         user_message=MessageResponse.model_validate(user_msg),
         assistant_message=MessageResponse.model_validate(assistant_msg),
-        audio_file=AudioFileResponse.model_validate(audio_file),
     )

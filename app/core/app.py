@@ -9,7 +9,7 @@ from sqlalchemy import text
 
 from app.controllers.router import router
 from app.core.config import settings
-from app.core.database import GetDB
+from app.core.database import GetDB, ensure_db_dir
 from app.core.errors import register_exception_handlers
 from app.core.logger import get_logger, setup_logging
 from app.core.logging_middleware import LoggingMiddleware
@@ -39,6 +39,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(router)
 
+    ensure_db_dir(settings.DATABASE_URL)
     Path(settings.AUDIO_STORAGE_DIR).mkdir(parents=True, exist_ok=True)
     app.mount("/audio", StaticFiles(directory=settings.AUDIO_STORAGE_DIR), name="audio")
 

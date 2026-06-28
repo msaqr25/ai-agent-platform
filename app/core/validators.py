@@ -11,24 +11,20 @@ MIME_TO_EXT: dict[str, str] = {
     "audio/webm": ".webm",
 }
 
-ALLOWED_AUDIO_MIME_TYPES: frozenset[str] = frozenset(MIME_TO_EXT)
-
 CHUNK_SIZE = 8 * 1024
 
 
-def get_extension(mime_type: str) -> str:
+def validate_mime_type(mime_type: str | None) -> str:
+    if mime_type is None:
+        raise BadRequestException(detail="Missing audio content type", code="INVALID_MIME_TYPE")
     ext = MIME_TO_EXT.get(mime_type)
     if ext is None:
-        raise BadRequestException(detail=f"Unsupported audio format: {mime_type}", code="INVALID_MIME_TYPE")
-    return ext
-
-
-def validate_audio_mime_type(content_type: str | None) -> None:
-    if content_type not in ALLOWED_AUDIO_MIME_TYPES:
+        allowed = ", ".join(sorted(MIME_TO_EXT))
         raise BadRequestException(
-            detail=f"Unsupported audio format: {content_type}. Allowed: {', '.join(sorted(ALLOWED_AUDIO_MIME_TYPES))}",
+            detail=f"Unsupported audio format: {mime_type}. Allowed: {allowed}",
             code="INVALID_MIME_TYPE",
         )
+    return ext
 
 
 def validate_audio_file_size(total: int, max_size: int) -> None:
@@ -46,10 +42,8 @@ def validate_audio_not_empty(total: int) -> None:
 
 async def read_and_validate_audio(upload: UploadFile, max_size: int) -> bytes:
     """Read upload stream, validate MIME type and size, return the raw bytes."""
-    validate_audio_mime_type(upload.content_type)
+    validate_mime_type(upload.content_type)
 
-    # Stream-read in chunks so we can abort early if the file exceeds max_size,
-    # rather than buffering the entire upload before validating.
     total = 0
     chunks: list[bytes] = []
     while chunk := await upload.read(CHUNK_SIZE):

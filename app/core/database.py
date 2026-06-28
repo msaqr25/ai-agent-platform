@@ -15,8 +15,6 @@ def ensure_db_dir(database_url: str) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
 
 
-ensure_db_dir(settings.DATABASE_URL)
-
 engine = create_async_engine(
     settings.DATABASE_URL,
 )

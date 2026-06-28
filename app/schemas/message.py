@@ -31,4 +31,3 @@ class SendMessageResponse(BaseModel):
 class VoiceResponse(BaseModel):
     user_message: MessageResponse
     assistant_message: MessageResponse
-    audio_file: AudioFileResponse

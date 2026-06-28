@@ -29,6 +29,6 @@ class Message(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     session: Mapped[ChatSession] = relationship(back_populates="messages")
-    audio_file: Mapped[AudioFile | None] = relationship(back_populates="message")
+    audio_file: Mapped[AudioFile | None] = relationship(back_populates="message", lazy="noload")
 
     __table_args__ = (Index("ix_messages_session_created", "session_id", "created_at"),)

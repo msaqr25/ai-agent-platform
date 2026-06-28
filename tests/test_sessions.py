@@ -3,14 +3,11 @@ from __future__ import annotations
 from fastapi import status
 from httpx import AsyncClient
 
-
-async def _create_agent(client: AsyncClient) -> int:
-    agent_resp = await client.post("/api/v1/agents/", json={"name": "Test Agent"})
-    return agent_resp.json()["id"]
+from tests.conftest import create_agent
 
 
 async def test_create_session(client: AsyncClient) -> None:
-    agent_id = await _create_agent(client)
+    agent_id = await create_agent(client)
     response = await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
@@ -24,7 +21,7 @@ async def test_create_session_invalid_agent(client: AsyncClient) -> None:
 
 
 async def test_get_session(client: AsyncClient) -> None:
-    agent_id = await _create_agent(client)
+    agent_id = await create_agent(client)
     create_resp = await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     session_id = create_resp.json()["id"]
     response = await client.get(f"/api/v1/sessions/{session_id}")
@@ -38,7 +35,7 @@ async def test_get_session_not_found(client: AsyncClient) -> None:
 
 
 async def test_delete_session(client: AsyncClient) -> None:
-    agent_id = await _create_agent(client)
+    agent_id = await create_agent(client)
     create_resp = await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     session_id = create_resp.json()["id"]
     response = await client.delete(f"/api/v1/sessions/{session_id}")
@@ -53,7 +50,7 @@ async def test_delete_session_not_found(client: AsyncClient) -> None:
 
 
 async def test_list_sessions_for_agent(client: AsyncClient) -> None:
-    agent_id = await _create_agent(client)
+    agent_id = await create_agent(client)
     await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     response = await client.get(f"/api/v1/sessions/agent/{agent_id}")
@@ -63,7 +60,7 @@ async def test_list_sessions_for_agent(client: AsyncClient) -> None:
 
 
 async def test_list_sessions_for_agent_pagination(client: AsyncClient) -> None:
-    agent_id = await _create_agent(client)
+    agent_id = await create_agent(client)
     for _ in range(3):
         await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     response = await client.get(f"/api/v1/sessions/agent/{agent_id}?skip=0&limit=2")
@@ -72,18 +69,18 @@ async def test_list_sessions_for_agent_pagination(client: AsyncClient) -> None:
 
 
 async def test_list_sessions_empty(client: AsyncClient) -> None:
-    agent_id = await _create_agent(client)
+    agent_id = await create_agent(client)
     response = await client.get(f"/api/v1/sessions/agent/{agent_id}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == []
 
 
 async def test_create_session_extra_fields(client: AsyncClient) -> None:
-    agent_id = await _create_agent(client)
+    agent_id = await create_agent(client)
     response = await client.post("/api/v1/sessions/", json={"agent_id": agent_id, "extra": "bad"})
-    assert response.status_code == 422  # noqa: PLR2004
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 async def test_create_session_agent_id_zero(client: AsyncClient) -> None:
     response = await client.post("/api/v1/sessions/", json={"agent_id": 0})
-    assert response.status_code == 422  # noqa: PLR2004
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT

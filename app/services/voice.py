@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.errors import OpenAIException
 from app.core.logger import get_logger
-from app.core.validators import get_extension
+from app.core.validators import validate_mime_type
 from app.models.audio_file import AudioFile
 from app.models.message import Message
 from app.repositories.audio_file import AudioFileRepository
@@ -38,7 +38,7 @@ class VoiceService:
         mime_type: str,
         openai_client: AsyncOpenAI,
     ) -> str:
-        ext = get_extension(mime_type)
+        ext = validate_mime_type(mime_type)
         stt_filename = f"input{ext}"
         try:
             transcript = await openai_client.audio.transcriptions.create(
@@ -72,7 +72,7 @@ class VoiceService:
         message_id: int,
         db: AsyncSession,
     ) -> AudioFile:
-        ext = get_extension(mime_type)
+        ext = validate_mime_type(mime_type)
         filename = f"{uuid.uuid4().hex}{ext}"
         session_dir = Path(settings.AUDIO_STORAGE_DIR) / str(session_id)
         session_dir.mkdir(parents=True, exist_ok=True)
@@ -113,7 +113,7 @@ class VoiceService:
         mime_type: str,
         db: AsyncSession,
         openai_client: AsyncOpenAI,
-    ) -> tuple[AudioFile, Message, Message]:
+    ) -> tuple[Message, Message]:
         """Full voice pipeline: STT → chat response → TTS → persist audio file."""
         await self.sessions.get_session(session_id, db)
 
@@ -137,7 +137,7 @@ class VoiceService:
 
         assistant_msg.audio_file = audio_file
 
-        return audio_file, user_msg, assistant_msg
+        return user_msg, assistant_msg
 
 
 voice_service = VoiceService()

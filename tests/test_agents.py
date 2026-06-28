@@ -18,7 +18,7 @@ async def test_create_agent(client: AsyncClient) -> None:
 
 async def test_create_agent_missing_fields(client: AsyncClient) -> None:
     response = await client.post("/api/v1/agents/", json={})
-    assert response.status_code == 422  # noqa: PLR2004
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 async def test_list_agents(client: AsyncClient) -> None:
@@ -92,12 +92,12 @@ async def test_delete_agent_cascades_to_sessions(client: AsyncClient) -> None:
 
 async def test_create_agent_extra_fields(client: AsyncClient) -> None:
     response = await client.post("/api/v1/agents/", json={"name": "Agent", "prompt": "Hi", "unknown_field": "oops"})
-    assert response.status_code == 422  # noqa: PLR2004
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 async def test_create_agent_empty_name(client: AsyncClient) -> None:
     response = await client.post("/api/v1/agents/", json={"name": ""})
-    assert response.status_code == 422  # noqa: PLR2004
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 async def test_list_agents_empty(client: AsyncClient) -> None:
