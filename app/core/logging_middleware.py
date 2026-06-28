@@ -11,6 +11,9 @@ ASGIApp = Callable[[dict[str, Any], ASGIReceive, ASGISend], Awaitable[None]]
 logger = get_logger("app.middleware")
 
 
+EXCLUDED_PATHS: frozenset[str] = frozenset({"/health"})
+
+
 class LoggingMiddleware:
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
@@ -18,6 +21,10 @@ class LoggingMiddleware:
     async def __call__(self, scope: dict[str, Any], receive: ASGIReceive, send: ASGISend) -> None:
         """Log request completion (or failure) with method, path, status, and duration."""
         if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        if scope.get("path", "") in EXCLUDED_PATHS:
             await self.app(scope, receive, send)
             return
 
