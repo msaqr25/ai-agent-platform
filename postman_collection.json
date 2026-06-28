@@ -1,28 +1,12 @@
 {
   "info": {
-    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "_postman_id": "00f94647-870e-4a63-8a7f-f498ab32a718",
     "name": "AI Agent Platform",
     "description": "AI Agent Platform",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "10000001"
+    "_exporter_id": "53833123",
+    "_collection_link": "https://go.postman.co/collection/53833123-00f94647-870e-4a63-8a7f-f498ab32a718?source=collection_link"
   },
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:8000",
-      "type": "string"
-    },
-    {
-      "key": "agent_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "session_id",
-      "value": "",
-      "type": "string"
-    }
-  ],
   "item": [
     {
       "name": "Health",
@@ -52,10 +36,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -101,10 +90,18 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/agents/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "agents", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "agents",
+                ""
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "List Agents",
@@ -117,12 +114,16 @@
                   "  pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('Returns an array', function () {",
+                  "pm.test(\"Returns paginated agents response\", function () {",
                   "  const json = pm.response.json();",
-                  "  pm.expect(json).to.be.an('array');",
+                  "  pm.expect(json).to.be.an(\"object\");",
+                  "  pm.expect(json.items).to.be.an(\"array\");",
+                  "  pm.expect(json.total).to.be.a(\"number\");",
                   "});"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -131,10 +132,18 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/agents/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "agents", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "agents",
+                ""
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Get Agent by ID",
@@ -174,10 +183,18 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/agents/{{agent_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "agents", "{{agent_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "agents",
+                "{{agent_id}}"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Update Agent",
@@ -227,10 +244,18 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/agents/{{agent_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "agents", "{{agent_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "agents",
+                "{{agent_id}}"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Get Agent - Not Found",
@@ -260,10 +285,18 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/agents/99999",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "agents", "99999"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "agents",
+                "99999"
+              ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -320,10 +353,18 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/sessions/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "sessions", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sessions",
+                ""
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "List Sessions for Agent",
@@ -337,7 +378,9 @@
                   "  throw new Error('Missing collection variable: agent_id');",
                   "}"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             },
             {
@@ -348,13 +391,16 @@
                   "  pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "const json = pm.response.json();",
-                  "",
-                  "pm.test('Returns an array', function () {",
-                  "  pm.expect(json).to.be.an('array');",
+                  "pm.test(\"Returns paginated sessions response\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an(\"object\");",
+                  "  pm.expect(json.items).to.be.an(\"array\");",
+                  "  pm.expect(json.total).to.be.a(\"number\");",
                   "});"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -363,14 +409,29 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/sessions/agent/{{agent_id}}?skip=0&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "sessions", "agent", "{{agent_id}}"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sessions",
+                "agent",
+                "{{agent_id}}"
+              ],
               "query": [
-                { "key": "skip", "value": "0" },
-                { "key": "limit", "value": "10" }
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Get Session by ID",
@@ -410,10 +471,18 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/sessions/{{session_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "sessions", "{{session_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sessions",
+                "{{session_id}}"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Get Session - Not Found",
@@ -443,10 +512,18 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/sessions/99999",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "sessions", "99999"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sessions",
+                "99999"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "List Messages",
@@ -460,7 +537,9 @@
                   "  throw new Error('Missing collection variable: session_id');",
                   "}"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             },
             {
@@ -471,13 +550,16 @@
                   "  pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "const json = pm.response.json();",
-                  "",
-                  "pm.test('Returns an array', function () {",
-                  "  pm.expect(json).to.be.an('array');",
+                  "pm.test(\"Returns paginated messages response\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an(\"object\");",
+                  "  pm.expect(json.items).to.be.an(\"array\");",
+                  "  pm.expect(json.total).to.be.a(\"number\");",
                   "});"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -486,14 +568,30 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/sessions/{{session_id}}/messages/?skip=0&limit=50",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "sessions", "{{session_id}}", "messages", ""],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sessions",
+                "{{session_id}}",
+                "messages",
+                ""
+              ],
               "query": [
-                { "key": "skip", "value": "0" },
-                { "key": "limit", "value": "50" }
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Send Message (Text)",
@@ -551,10 +649,20 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/sessions/{{session_id}}/messages/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "sessions", "{{session_id}}", "messages", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sessions",
+                "{{session_id}}",
+                "messages",
+                ""
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Send Voice Message",
@@ -623,18 +731,28 @@
                 {
                   "key": "audio",
                   "type": "file",
-                  "src": "",
-                  "description": "Select an audio file (.wav, .mp3, .ogg, or .webm, max 10 MB)"
+                  "description": "Select an audio file (.wav, .mp3, .ogg, or .webm, max 10 MB)",
+                  "value": ""
                 }
               ]
             },
             "url": {
               "raw": "{{base_url}}/api/v1/sessions/{{session_id}}/voice/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "sessions", "{{session_id}}", "voice", ""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sessions",
+                "{{session_id}}",
+                "voice",
+                ""
+              ]
             },
             "description": "Requires a real audio file. Select one from the form-data field before running."
-          }
+          },
+          "response": []
         },
         {
           "name": "Delete Session",
@@ -674,10 +792,18 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/sessions/{{session_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "sessions", "{{session_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sessions",
+                "{{session_id}}"
+              ]
             }
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -722,12 +848,26 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/agents/{{agent_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "agents", "{{agent_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "agents",
+                "{{agent_id}}"
+              ]
             }
-          }
+          },
+          "response": []
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
     }
   ]
 }
