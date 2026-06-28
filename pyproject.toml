@@ -1,7 +1,7 @@
 [project]
 name = "ai-agent-platform"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI agent chat platform with voice (STT/TTS) — FastAPI + async SQLAlchemy + SQLite"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
