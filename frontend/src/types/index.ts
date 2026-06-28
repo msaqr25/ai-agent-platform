@@ -62,6 +62,20 @@ export interface VoiceResponse {
   audio_file: AudioFileResponse
 }
 
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+}
+
+export interface PaginationParams {
+  skip?: number
+  limit?: number
+}
+
+export interface MessagePaginationParams extends PaginationParams {
+  order?: 'asc' | 'desc'
+}
+
 export interface ErrorResponse {
   detail: string
   code?: string

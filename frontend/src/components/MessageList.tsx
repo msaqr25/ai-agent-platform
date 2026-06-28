@@ -2,13 +2,19 @@ import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../context/AppContext'
 
 export function MessageList() {
-  const { state, consumePendingPlayback } = useApp()
+  const { state, consumePendingPlayback, loadMoreMessages } = useApp()
   const bottomRef = useRef<HTMLDivElement>(null)
   const [playingId, setPlayingId] = useState<number | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const prevLastMessageIdRef = useRef<number | null>(null)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const lastId = state.messages[state.messages.length - 1]?.id ?? null
+    const prevLastId = prevLastMessageIdRef.current
+    prevLastMessageIdRef.current = lastId
+    if (prevLastId !== null && lastId !== null && lastId !== prevLastId) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [state.messages])
 
   // After a voice message is sent, auto-play the assistant's TTS audio.
@@ -73,6 +79,16 @@ export function MessageList() {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-4">
       <div className="mx-auto max-w-3xl space-y-4">
+        {state.messagesTotal > state.messages.length && (
+          <div className="flex justify-center">
+            <button
+              onClick={loadMoreMessages}
+              className="rounded-lg px-4 py-2 text-xs font-medium text-accent transition-colors hover:bg-dark-600"
+            >
+              Load older messages ({state.messages.length} of {state.messagesTotal})
+            </button>
+          </div>
+        )}
         {state.messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div

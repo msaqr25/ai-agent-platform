@@ -4,7 +4,7 @@ import { Modal } from './Modal'
 import { ConfirmDialog } from './ConfirmDialog'
 
 export function Sidebar() {
-  const { state, selectAgent, createAgent, updateAgent, deleteAgent, toggleSidebar } = useApp()
+  const { state, selectAgent, createAgent, updateAgent, deleteAgent, toggleSidebar, loadMoreAgents } = useApp()
   const [showNewAgent, setShowNewAgent] = useState(false)
   const [newName, setNewName] = useState('')
   const [newPrompt, setNewPrompt] = useState('')
@@ -133,6 +133,14 @@ export function Sidebar() {
               </button>
             </div>
           ))}
+          {state.agentsTotal > state.agents.length && (
+            <button
+              onClick={loadMoreAgents}
+              className="w-full rounded-lg px-3 py-2 text-center text-xs font-medium text-accent transition-colors hover:bg-dark-600"
+            >
+              Load more agents ({state.agents.length} of {state.agentsTotal})
+            </button>
+          )}
         </div>
 
         <div className="border-t border-border p-3">

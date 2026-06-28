@@ -1,6 +1,6 @@
 import type { AgentCreate, AgentResponse, AgentUpdate } from '../types'
 import type { ChatSessionCreate, ChatSessionResponse } from '../types'
-import type { MessageCreate, MessageResponse, SendMessageResponse } from '../types'
+import type { MessageCreate, MessageResponse, SendMessageResponse, PaginatedResponse, PaginationParams, MessagePaginationParams } from '../types'
 import type { VoiceResponse, ErrorResponse } from '../types'
 
 class ApiError extends Error {
@@ -41,9 +41,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>
 }
 
+function buildUrl(base: string, params?: object): string {
+  if (!params) return base
+  const entries = Object.entries(params).filter(([_, v]) => v !== undefined)
+  if (entries.length === 0) return base
+  const qs = new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString()
+  return `${base}?${qs}`
+}
+
 export const api = {
   agents: {
-    list: () => request<AgentResponse[]>('/api/v1/agents/'),
+    list: (params?: PaginationParams) =>
+      request<PaginatedResponse<AgentResponse>>(buildUrl('/api/v1/agents/', params)),
     get: (id: number) => request<AgentResponse>(`/api/v1/agents/${id}`),
     create: (data: AgentCreate) =>
       request<AgentResponse>('/api/v1/agents/', {
@@ -60,8 +69,8 @@ export const api = {
   },
 
   sessions: {
-    listForAgent: (agentId: number) =>
-      request<ChatSessionResponse[]>(`/api/v1/sessions/agent/${agentId}`),
+    listForAgent: (agentId: number, params?: PaginationParams) =>
+      request<PaginatedResponse<ChatSessionResponse>>(buildUrl(`/api/v1/sessions/agent/${agentId}`, params)),
     get: (id: number) => request<ChatSessionResponse>(`/api/v1/sessions/${id}`),
     create: (data: ChatSessionCreate) =>
       request<ChatSessionResponse>('/api/v1/sessions/', {
@@ -73,8 +82,8 @@ export const api = {
   },
 
   messages: {
-    list: (sessionId: number) =>
-      request<MessageResponse[]>(`/api/v1/sessions/${sessionId}/messages/`),
+    list: (sessionId: number, params?: MessagePaginationParams) =>
+      request<PaginatedResponse<MessageResponse>>(buildUrl(`/api/v1/sessions/${sessionId}/messages/`, params)),
     send: (sessionId: number, data: MessageCreate) =>
       request<SendMessageResponse>(`/api/v1/sessions/${sessionId}/messages/`, {
         method: 'POST',
