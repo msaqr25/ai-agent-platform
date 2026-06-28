@@ -1,7 +1,8 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
 from app.core.database import GetDB
 from app.schemas.agent import AgentCreate, AgentResponse, AgentUpdate
+from app.schemas.pagination import PaginatedResponse
 from app.services.agent import agent_service
 
 router = APIRouter(prefix="/agents", tags=["agents"])
@@ -13,10 +14,17 @@ async def create_agent(data: AgentCreate, db: GetDB) -> AgentResponse:
     return AgentResponse.model_validate(agent)
 
 
-@router.get("/", response_model=list[AgentResponse])
-async def list_agents(db: GetDB) -> list[AgentResponse]:
-    agents = await agent_service.list_agents(db)
-    return [AgentResponse.model_validate(agent) for agent in agents]
+@router.get("/", response_model=PaginatedResponse[AgentResponse])
+async def list_agents(
+    db: GetDB,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+) -> PaginatedResponse[AgentResponse]:
+    agents, total = await agent_service.list_agents(db, skip=skip, limit=limit)
+    return PaginatedResponse(
+        items=[AgentResponse.model_validate(agent) for agent in agents],
+        total=total,
+    )
 
 
 @router.get("/{agent_id}", response_model=AgentResponse)

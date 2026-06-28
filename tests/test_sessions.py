@@ -55,8 +55,9 @@ async def test_list_sessions_for_agent(client: AsyncClient) -> None:
     await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     response = await client.get(f"/api/v1/sessions/agent/{agent_id}")
     assert response.status_code == status.HTTP_200_OK
-    sessions = response.json()
-    assert len(sessions) == 2  # noqa: PLR2004
+    body = response.json()
+    assert len(body["items"]) == 2  # noqa: PLR2004
+    assert body["total"] == 2  # noqa: PLR2004
 
 
 async def test_list_sessions_for_agent_pagination(client: AsyncClient) -> None:
@@ -65,14 +66,16 @@ async def test_list_sessions_for_agent_pagination(client: AsyncClient) -> None:
         await client.post("/api/v1/sessions/", json={"agent_id": agent_id})
     response = await client.get(f"/api/v1/sessions/agent/{agent_id}?skip=0&limit=2")
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 2  # noqa: PLR2004
+    body = response.json()
+    assert len(body["items"]) == 2  # noqa: PLR2004
+    assert body["total"] == 3  # noqa: PLR2004
 
 
 async def test_list_sessions_empty(client: AsyncClient) -> None:
     agent_id = await create_agent(client)
     response = await client.get(f"/api/v1/sessions/agent/{agent_id}")
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
+    assert response.json() == {"items": [], "total": 0}
 
 
 async def test_create_session_extra_fields(client: AsyncClient) -> None:

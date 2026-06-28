@@ -2,6 +2,7 @@ from fastapi import APIRouter, Query, status
 
 from app.core.database import GetDB
 from app.schemas.chat_session import ChatSessionCreate, ChatSessionResponse
+from app.schemas.pagination import PaginatedResponse
 from app.services.chat_session import chat_session_service
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -13,15 +14,18 @@ async def create_session(data: ChatSessionCreate, db: GetDB) -> ChatSessionRespo
     return ChatSessionResponse.model_validate(session)
 
 
-@router.get("/agent/{agent_id}", response_model=list[ChatSessionResponse])
+@router.get("/agent/{agent_id}", response_model=PaginatedResponse[ChatSessionResponse])
 async def list_sessions_for_agent(
     agent_id: int,
     db: GetDB,
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
-) -> list[ChatSessionResponse]:
-    sessions = await chat_session_service.list_sessions_for_agent(agent_id, db, skip=skip, limit=limit)
-    return [ChatSessionResponse.model_validate(session) for session in sessions]
+    limit: int = Query(200, ge=1, le=500),
+) -> PaginatedResponse[ChatSessionResponse]:
+    sessions, total = await chat_session_service.list_sessions_for_agent(agent_id, db, skip=skip, limit=limit)
+    return PaginatedResponse(
+        items=[ChatSessionResponse.model_validate(session) for session in sessions],
+        total=total,
+    )
 
 
 @router.get("/{session_id}", response_model=ChatSessionResponse)

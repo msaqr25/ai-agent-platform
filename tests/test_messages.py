@@ -63,9 +63,10 @@ async def test_get_messages(client_with_openai: AsyncClient, mock_openai: AsyncM
 
     response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/")
     assert response.status_code == status.HTTP_200_OK
-    messages = response.json()
+    body = response.json()
     # 2 user messages × 2 (user + assistant) = 4 total
-    assert len(messages) == 4  # noqa: PLR2004
+    assert len(body["items"]) == 4  # noqa: PLR2004
+    assert body["total"] == 4  # noqa: PLR2004
 
 
 async def test_get_messages_session_not_found(client_with_openai: AsyncClient) -> None:
@@ -77,7 +78,7 @@ async def test_get_messages_empty(client_with_openai: AsyncClient) -> None:
     _, session_id = await create_agent_and_session(client_with_openai)
     response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/")
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
+    assert response.json() == {"items": [], "total": 0}
 
 
 async def test_send_message_openai_error(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
@@ -115,7 +116,7 @@ async def test_send_message_openai_error_does_not_persist(
 
     response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/")
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 0
+    assert response.json()["items"] == []
 
 
 async def test_get_messages_pagination(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
@@ -127,7 +128,26 @@ async def test_get_messages_pagination(client_with_openai: AsyncClient, mock_ope
 
     response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/?skip=0&limit=2")
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 2  # noqa: PLR2004
+    body = response.json()
+    assert len(body["items"]) == 2  # noqa: PLR2004
+    assert body["total"] == 10  # noqa: PLR2004
+
+
+async def test_get_messages_desc_order(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
+    _, session_id = await create_agent_and_session(client_with_openai)
+    mock_chat_completion(mock_openai, "Response")
+
+    for i in range(5):
+        await client_with_openai.post(f"/api/v1/sessions/{session_id}/messages/", json={"content": f"msg {i}"})
+
+    response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/?order=desc&limit=3")
+    assert response.status_code == status.HTTP_200_OK
+    body = response.json()
+    assert len(body["items"]) == 3  # noqa: PLR2004
+    assert body["total"] == 10  # noqa: PLR2004
+    # With desc order, newest messages come first
+    ids = [msg["id"] for msg in body["items"]]
+    assert ids == sorted(ids, reverse=True)
 
 
 async def test_session_title_set_on_first_message(

@@ -23,9 +23,11 @@ class ChatSessionService:
         return await self.repository.create(db, data.model_dump())
 
     async def list_sessions_for_agent(
-        self, agent_id: int, db: AsyncSession, skip: int = 0, limit: int = 100
-    ) -> list[ChatSession]:
-        return await self.repository.get_by_agent_id(db, agent_id, skip=skip, limit=limit)
+        self, agent_id: int, db: AsyncSession, skip: int = 0, limit: int = 200
+    ) -> tuple[list[ChatSession], int]:
+        items = await self.repository.get_by_agent_id(db, agent_id, skip=skip, limit=limit)
+        total = await self.repository.count_by_agent_id(db, agent_id)
+        return items, total
 
     async def get_session_with_agent(self, session_id: int, db: AsyncSession) -> ChatSession:
         session = await self.repository.get_by_id_with_agent(db, session_id)

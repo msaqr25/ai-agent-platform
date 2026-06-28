@@ -26,9 +26,13 @@ class MessageService:
         self.repository = repository or MessageRepository()
         self.sessions = sessions or chat_session_service
 
-    async def get_messages(self, session_id: int, db: AsyncSession, skip: int = 0, limit: int = 1000) -> list[Message]:
+    async def get_messages(
+        self, session_id: int, db: AsyncSession, skip: int = 0, limit: int = 50, order: str = "asc"
+    ) -> tuple[list[Message], int]:
         await self.sessions.get_session(session_id, db)
-        return await self.repository.get_by_session_id(db, session_id, skip=skip, limit=limit)
+        items = await self.repository.get_by_session_id(db, session_id, skip=skip, limit=limit, order=order)
+        total = await self.repository.count_by_session_id(db, session_id)
+        return items, total
 
     async def send_message(
         self,

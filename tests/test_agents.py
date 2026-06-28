@@ -26,8 +26,9 @@ async def test_list_agents(client: AsyncClient) -> None:
     await client.post("/api/v1/agents/", json={"name": "Agent 2"})
     response = await client.get("/api/v1/agents/")
     assert response.status_code == status.HTTP_200_OK
-    agents = response.json()
-    assert len(agents) == 2  # noqa: PLR2004
+    body = response.json()
+    assert len(body["items"]) == 2  # noqa: PLR2004
+    assert body["total"] == 2  # noqa: PLR2004
 
 
 async def test_get_agent(client: AsyncClient) -> None:
@@ -100,10 +101,20 @@ async def test_create_agent_empty_name(client: AsyncClient) -> None:
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
+async def test_list_agents_pagination(client: AsyncClient) -> None:
+    for i in range(5):
+        await client.post("/api/v1/agents/", json={"name": f"Agent {i}"})
+    response = await client.get("/api/v1/agents/?skip=0&limit=2")
+    assert response.status_code == status.HTTP_200_OK
+    body = response.json()
+    assert len(body["items"]) == 2  # noqa: PLR2004
+    assert body["total"] == 5  # noqa: PLR2004
+
+
 async def test_list_agents_empty(client: AsyncClient) -> None:
     response = await client.get("/api/v1/agents/")
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
+    assert response.json() == {"items": [], "total": 0}
 
 
 def test_agent_update_allows_single_field() -> None:

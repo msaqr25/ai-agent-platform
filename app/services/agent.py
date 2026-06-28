@@ -18,8 +18,10 @@ class AgentService:
         logger.info("Agent created", extra={"agent_id": agent.id})
         return agent
 
-    async def list_agents(self, db: AsyncSession) -> list[Agent]:
-        return await self.repository.get_all(db)
+    async def list_agents(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> tuple[list[Agent], int]:
+        items = await self.repository.get_all(db, skip=skip, limit=limit)
+        total = await self.repository.count(db)
+        return items, total
 
     async def get_agent(self, agent_id: int, db: AsyncSession) -> Agent:
         agent = await self.repository.get_by_id(db, agent_id)

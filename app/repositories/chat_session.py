@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -14,6 +14,11 @@ class ChatSessionRepository(BaseRepository[ChatSession]):
         stmt = select(ChatSession).options(joinedload(ChatSession.agent)).where(ChatSession.id == id)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def count_by_agent_id(self, db: AsyncSession, agent_id: int) -> int:
+        stmt = select(func.count()).select_from(ChatSession).where(ChatSession.agent_id == agent_id)
+        result = await db.execute(stmt)
+        return result.scalar_one()
 
     async def get_by_agent_id(
         self, db: AsyncSession, agent_id: int, skip: int = 0, limit: int = 100
