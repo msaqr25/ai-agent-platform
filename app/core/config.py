@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     OPENAI_TTS_VOICE: str = "alloy"
     OPENAI_TTS_OUTPUT_MIME: str = "audio/mpeg"
 
+    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
     AUDIO_STORAGE_DIR: str = "audio_files"
     MAX_AUDIO_FILE_SIZE: int = 10 * 1024 * 1024
 
