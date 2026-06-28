@@ -124,6 +124,7 @@ class VoiceService:
         )
 
         user_msg, assistant_msg = await self.messages.send_message(session_id, transcript_text, db, openai_client)
+        await db.commit()
 
         tts_bytes = await self._synthesize(assistant_msg.content, openai_client)
 
@@ -134,6 +135,7 @@ class VoiceService:
             assistant_msg.id,
             db,
         )
+        await db.commit()
 
         assistant_msg.audio_file = audio_file
 
