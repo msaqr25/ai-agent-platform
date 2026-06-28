@@ -131,7 +131,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/agents/",
+              "raw": "{{base_url}}/api/v1/agents/?skip=0&limit=100",
               "host": [
                 "{{base_url}}"
               ],
@@ -140,6 +140,16 @@
                 "v1",
                 "agents",
                 ""
+              ],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
               ]
             }
           },
@@ -567,7 +577,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/sessions/{{session_id}}/messages/?skip=0&limit=50",
+              "raw": "{{base_url}}/api/v1/sessions/{{session_id}}/messages/?skip=0&limit=50&order=asc",
               "host": [
                 "{{base_url}}"
               ],
@@ -587,6 +597,10 @@
                 {
                   "key": "limit",
                   "value": "50"
+                },
+                {
+                  "key": "order",
+                  "value": "asc"
                 }
               ]
             }
