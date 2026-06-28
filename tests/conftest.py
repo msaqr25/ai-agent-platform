@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from app.core.app import create_app
 from app.core.database import Base, get_db
+from app.core.errors import OpenAIException
 from app.core.openai import get_openai_client
 
 
@@ -95,5 +96,21 @@ async def app_with_openai(app: FastAPI, mock_openai: AsyncMock) -> FastAPI:
 @pytest_asyncio.fixture
 async def client_with_openai(app_with_openai: FastAPI) -> AsyncGenerator[AsyncClient]:
     transport = ASGITransport(app=app_with_openai)
+    async with AsyncClient(transport=transport, base_url="http://test") as _client:
+        yield _client
+
+
+@pytest_asyncio.fixture
+async def app_without_openai(app: FastAPI) -> FastAPI:
+    async def _raise_openai():
+        raise OpenAIException(detail="OpenAI client is not configured")
+
+    app.dependency_overrides[get_openai_client] = _raise_openai  # type: ignore[assignment]
+    return app
+
+
+@pytest_asyncio.fixture
+async def client_without_openai(app_without_openai: FastAPI) -> AsyncGenerator[AsyncClient]:
+    transport = ASGITransport(app=app_without_openai)
     async with AsyncClient(transport=transport, base_url="http://test") as _client:
         yield _client

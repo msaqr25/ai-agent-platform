@@ -15,11 +15,20 @@ async def _create_agent_and_session(client: AsyncClient) -> tuple[int, int]:
     return agent_id, session_id
 
 
-async def test_send_message_empty_content(client: AsyncClient) -> None:
-    _, session_id = await _create_agent_and_session(client)
-    response = await client.post(
+async def test_send_message_empty_content(client_with_openai: AsyncClient) -> None:
+    _, session_id = await _create_agent_and_session(client_with_openai)
+    response = await client_with_openai.post(
         f"/api/v1/sessions/{session_id}/messages/",
         json={"content": ""},
+    )
+    assert response.status_code == 422  # noqa: PLR2004
+
+
+async def test_send_message_content_too_long(client_with_openai: AsyncClient) -> None:
+    _, session_id = await _create_agent_and_session(client_with_openai)
+    response = await client_with_openai.post(
+        f"/api/v1/sessions/{session_id}/messages/",
+        json={"content": "x" * 50001},
     )
     assert response.status_code == 422  # noqa: PLR2004
 
@@ -47,6 +56,14 @@ async def test_send_message(client_with_openai: AsyncClient, mock_openai: AsyncM
     assert data["assistant_message"]["audio_file"] is None
 
 
+async def test_send_message_session_not_found(client_with_openai: AsyncClient) -> None:
+    response = await client_with_openai.post(
+        "/api/v1/sessions/9999/messages/",
+        json={"content": "Hello"},
+    )
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 async def test_get_messages(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
     _, session_id = await _create_agent_and_session(client_with_openai)
 
@@ -65,6 +82,18 @@ async def test_get_messages(client_with_openai: AsyncClient, mock_openai: AsyncM
     assert len(messages) == 4  # noqa: PLR2004
 
 
+async def test_get_messages_session_not_found(client_with_openai: AsyncClient) -> None:
+    response = await client_with_openai.get("/api/v1/sessions/9999/messages/")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+async def test_get_messages_empty(client_with_openai: AsyncClient) -> None:
+    _, session_id = await _create_agent_and_session(client_with_openai)
+    response = await client_with_openai.get(f"/api/v1/sessions/{session_id}/messages/")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+
+
 async def test_send_message_openai_error(client_with_openai: AsyncClient, mock_openai: AsyncMock) -> None:
     _, session_id = await _create_agent_and_session(client_with_openai)
 
@@ -72,6 +101,18 @@ async def test_send_message_openai_error(client_with_openai: AsyncClient, mock_o
 
     response = await client_with_openai.post(
         f"/api/v1/sessions/{session_id}/messages/",
+        json={"content": "Hello"},
+    )
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    data = response.json()
+    assert data["code"] == "OPENAI_ERROR"
+
+
+async def test_send_message_openai_unconfigured(
+    client_without_openai: AsyncClient,
+) -> None:
+    response = await client_without_openai.post(
+        "/api/v1/sessions/1/messages/",
         json={"content": "Hello"},
     )
     assert response.status_code == status.HTTP_502_BAD_GATEWAY
@@ -131,3 +172,28 @@ async def test_session_title_set_on_first_message(
     assert session_resp.status_code == status.HTTP_200_OK
     expected_title = "Hello, this is my first message in the session"[:60]
     assert session_resp.json()["title"] == expected_title
+
+
+async def test_session_title_unchanged_on_subsequent_messages(
+    client_with_openai: AsyncClient,
+    mock_openai: AsyncMock,
+) -> None:
+    _, session_id = await _create_agent_and_session(client_with_openai)
+
+    mock_completion = MagicMock()
+    mock_choice = MagicMock()
+    mock_choice.message.content = "Assistant reply"
+    mock_completion.choices = [mock_choice]
+    mock_openai.chat.completions.create = AsyncMock(return_value=mock_completion)
+
+    await client_with_openai.post(
+        f"/api/v1/sessions/{session_id}/messages/",
+        json={"content": "First message"},
+    )
+    await client_with_openai.post(
+        f"/api/v1/sessions/{session_id}/messages/",
+        json={"content": "Second message"},
+    )
+
+    session_resp = await client_with_openai.get(f"/api/v1/sessions/{session_id}")
+    assert session_resp.json()["title"] == "First message"
