@@ -303,3 +303,14 @@ All configuration is managed via pydantic-settings and read from `.env`. The ful
 | `AUDIO_STORAGE_DIR`       | `data/audio_files`        | Directory for audio file storage         |
 | `MAX_AUDIO_FILE_SIZE`     | `10485760` (10 MB)        | Maximum upload size in bytes             |
 
+---
+
+## Future Improvements
+
+- **On-demand TTS**: Return text-only responses for voice messages by default, let users tap a speaker button to generate speech on demand (similar to ChatGPT's voice mode).
+- **Image / file attachments**: Multi-modal message support (images, PDFs, etc.).
+- **Streaming responses**: Stream LLM tokens to the frontend in real-time.
+- **Message editing**: Edit a sent message and regenerate the assistant's reply.
+- **Markdown rendering**: Render code blocks with syntax highlighting and formatting in assistant messages.
+- **Rate limiting**: Prevent API abuse.
+
