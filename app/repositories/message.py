@@ -21,7 +21,6 @@ class MessageRepository(BaseRepository[Message]):
         session_id: int,
         skip: int = 0,
         limit: int = 1000,
-        *,
         load_audio: bool = True,
         order: str = "asc",
     ) -> list[Message]:
