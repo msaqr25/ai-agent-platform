@@ -100,7 +100,7 @@ export function MessageList() {
             >
               <p className="whitespace-pre-wrap break-words">{msg.content}</p>
               <div className="mt-1 flex items-center gap-2">
-                {msg.role === 'assistant' && msg.audio_file && (
+                {msg.audio_file && (
                   <button
                     onClick={() => togglePlay(msg.id, msg.audio_file!.file_path)}
                     className="flex h-6 w-6 items-center justify-center rounded-full bg-dark-600 text-text-secondary transition-colors hover:bg-dark-500 hover:text-text-primary"

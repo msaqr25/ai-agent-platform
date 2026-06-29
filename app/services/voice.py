@@ -102,19 +102,17 @@ class VoiceService:
         )
 
         user_msg, assistant_msg = await self.messages.send_message(session_id, transcript_text, db, openai_client)
+        user_audio_file = await self._save_audio_file(audio_bytes, mime_type, session_id, user_msg.id, db)
         await db.commit()
 
         tts_bytes = await self._synthesize(assistant_msg.content, openai_client)
 
-        audio_file = await self._save_audio_file(
-            tts_bytes,
-            settings.OPENAI_TTS_OUTPUT_MIME,
-            session_id,
-            assistant_msg.id,
-            db,
+        assistant_audio_file = await self._save_audio_file(
+            tts_bytes, settings.OPENAI_TTS_OUTPUT_MIME, session_id, assistant_msg.id, db
         )
         await db.commit()
 
-        assistant_msg.audio_file = audio_file
+        user_msg.audio_file = user_audio_file
+        assistant_msg.audio_file = assistant_audio_file
 
         return user_msg, assistant_msg
